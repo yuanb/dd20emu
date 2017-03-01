@@ -17,7 +17,7 @@ Todo list:
 2017-03-01<br />
 With some patience, I manually decoded the Laser310 tape recording header in Audacity. Click on the image to see full picture. My understanding of bit pulse is 1: two low/short pulse, 0: one high/long pulse, there is a low/short pulse after each bit.<br />
 It seems the Laser310 cassette program recording header is :<br />
-0x80 - Leading bytes(many)<br />
+0x80 - Leading bytes(many, about 3.61s, probably 252 bytes)<br />
 0xFE - Sync bytes(5 bytes)<br />
 0xF0 - File type : Basic, 0xF1 : Binary<br />
 0xxx - File name (BUST OUT), up to 17 bytes<br />
