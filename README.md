@@ -18,6 +18,7 @@ Todo list:
 With some patience, I manually decoded the Laser310 tape recording header in Audacity. Click on the images to see full pictures.Bit pulses are 1: three low/short pulses, 0: one low/short and one cycle of high/long pulses.<br />
 Laser200/Laser310's cassette port operates at 600 bps Baud rate. This is a snapshot of the cassette waveforms found in VZ300 technical manual<br />
 [![Laser 310 cassette waveforms](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/cassette_waveforms.png)](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/cassette_waveforms.png)
+The chart above shows: 1.66ms/bit, which is 1000ms/1.66ms = 602.41bps. 0.277us/pulse, 50/50 duty cycle.<br />
 
 It seems the Laser310 cassette program recording header is :<br />
 0x80 - Leading bytes(many, about 3.61s, probably 252 bytes)<br />
