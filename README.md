@@ -14,9 +14,9 @@ Todo list:
 * Design a 16K SRAM extension card to Laser 200
 * I have about 2.25 hours length of Laser 310 data tape. They are Demo, Utilities, Games, Basic program I wrote etc. I would like to convert them to vz files. Giving they are 30 years old, the recorder I used back then was not a standard data recorder, there is only a little hope. [This link](http://www.pagetable.com/?p=32) describes how data tape encoding works on Apple I.
 
-2017-03-01
+2017-03-01<br />
 With some patience, I manually decoded the Laser310 tape recording header in Audacity.
 [![Manual decoded Laser310 game recording header](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/bust_out.png)](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/bust_out.png)
 
-2017-02-20
+2017-02-20<br />
 Created dd20emu project on github.
