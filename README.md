@@ -18,5 +18,7 @@ Todo list:
 With some patience, I manually decoded the Laser310 tape recording header in Audacity.
 [![Manual decoded Laser310 game recording header](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/bust_out.png)](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/bust_out.png)
 
+Here is a [ASCII Chart](http://www.bluesock.org/~willg/dev/ascii.html)
+
 2017-02-20<br />
 Created dd20emu project on github.
