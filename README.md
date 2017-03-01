@@ -15,7 +15,10 @@ Todo list:
 * I have about 2.25 hours length of Laser 310 data tape. They are Demo, Utilities, Games, Basic program I wrote etc. I would like to convert them to vz files. Giving they are 30 years old, the recorder I used back then was not a standard data recorder, there is only a little hope. [This link](http://www.pagetable.com/?p=32) describes how data tape encoding works on Apple I.
 
 2017-03-01<br />
-With some patience, I manually decoded the Laser310 tape recording header in Audacity. Click on the image to see full picture. My understanding of bit pulse is 1: two low/short pulse, 0: one high/long pulse, there is a low/short pulse after each bit.<br />
+With some patience, I manually decoded the Laser310 tape recording header in Audacity. Click on the image to see full picture. My understanding of bit pulse is 1: three low/short pulses, 0: one low/short and one cycle of high/long pulses.<br />
+This is a snapshot of the cassette waveforms found in VZ300 technical manual
+[![Laser 310 cassette waveforms](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/cassette_waveforms.png)](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/cassette_waveforms.png)
+
 It seems the Laser310 cassette program recording header is :<br />
 0x80 - Leading bytes(many, about 3.61s, probably 252 bytes)<br />
 0xFE - Sync bytes(5 bytes)<br />
@@ -24,7 +27,7 @@ It seems the Laser310 cassette program recording header is :<br />
 0x00 - End of header, there is an extra *pause* after this byte<br /> 
 0x7AE9 - Start Address, LSB first, MSB later<br />
 ......<br />
-[![Manual decoded Laser310 game recording header](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/bust_out.png)](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/bust_out.png)
+[![Manual decoded Laser310 game recording header](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/bust_out_header.png)](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/bust_out_header.png)
 
 Here is a [ASCII Chart](http://www.bluesock.org/~willg/dev/ascii.html)
 
