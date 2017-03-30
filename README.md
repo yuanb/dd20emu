@@ -16,6 +16,7 @@ Todo list:
 
 2017-03-29<br />
 [3ChipVZ](http://intertek00.customer.netspace.net.au/3ChipVZ/), Trying to recreate Laser200/310 with Teensy
+[Teensy Z80](http://labs.domipheus.com/blog/teensy-z80-part-1-intro-memory-serial-io-and-display/) 
 
 2017-03-01<br />
 With some patience, I manually decoded the Laser310 tape recording header in Audacity. Click on the images to see full pictures.Bit pulses are 1: three low/short pulses, 0: one low/short and one cycle of high/long pulses.<br />
