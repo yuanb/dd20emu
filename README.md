@@ -16,7 +16,6 @@ Todo list:
 
 2017-03-29<br />
 [3ChipVZ](http://intertek00.customer.netspace.net.au/3ChipVZ/), Trying to recreate Laser200/310 with Teensy <br />
-[Teensy Z80](http://labs.domipheus.com/blog/teensy-z80-part-1-intro-memory-serial-io-and-display/) 
 
 2017-03-01<br />
 With some patience, I manually decoded the Laser310 tape recording header in Audacity. Click on the images to see full pictures.Bit pulses are 1: three low/short pulses, 0: one low/short and one cycle of high/long pulses.<br />
@@ -38,3 +37,8 @@ Here is a [ASCII Chart](http://www.bluesock.org/~willg/dev/ascii.html)
 
 2017-02-20<br />
 Created dd20emu project on github.
+
+## Some useful links
+[Teensy Z80](http://labs.domipheus.com/blog/teensy-z80-part-1-intro-memory-serial-io-and-display/) Teensy serves as peripheral and ROM.
+[DIY EEPROM programmer](http://danceswithferrets.org/geekblog/?p=496) Arduino Mega EEPROM programmer
+[Quick and Dirty Parallel FLASH programmer](https://hackaday.io/project/6275-quick-and-dirty-parallel-flash-programmer) Use an Arduino Mega and minimal parts to programme parallel FLASH.
