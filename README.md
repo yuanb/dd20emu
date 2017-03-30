@@ -15,7 +15,7 @@ Todo list:
 * I have about 2.25 hours length of Laser 310 data tape. They are Demo, Utilities, Games, Basic program I wrote etc. I would like to convert them to vz files. Giving they are 30 years old, the recorder I used back then was not a standard data recorder, there is only a little hope. [This link](http://www.pagetable.com/?p=32) describes how data tape encoding works on Apple I.
 
 2017-03-29<br />
-[3ChipVZ](http://intertek00.customer.netspace.net.au/3ChipVZ/), Trying to recreate Laser200/310 with Teensy
+[3ChipVZ](http://intertek00.customer.netspace.net.au/3ChipVZ/), Trying to recreate Laser200/310 with Teensy <br />
 [Teensy Z80](http://labs.domipheus.com/blog/teensy-z80-part-1-intro-memory-serial-io-and-display/) 
 
 2017-03-01<br />
