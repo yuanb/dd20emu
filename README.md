@@ -38,7 +38,7 @@ Here is a [ASCII Chart](http://www.bluesock.org/~willg/dev/ascii.html)
 2017-02-20<br />
 Created dd20emu project on github.
 
-## Some useful links
+### Some useful links
 [Teensy Z80](http://labs.domipheus.com/blog/teensy-z80-part-1-intro-memory-serial-io-and-display/) Teensy serves as peripheral and ROM.<br />
 [DIY EEPROM programmer](http://danceswithferrets.org/geekblog/?p=496) Arduino Mega EEPROM programmer.<br />
 [Quick and Dirty Parallel FLASH programmer](https://hackaday.io/project/6275-quick-and-dirty-parallel-flash-programmer) Use an Arduino Mega and minimal parts to programme parallel FLASH.<br />
