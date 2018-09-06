@@ -14,6 +14,13 @@ Todo list:
 * Design a 16K SRAM extension card to Laser 200
 * I have about 2.25 hours length of Laser 310 data tape. They are Demo, Utilities, Games, Basic program I wrote etc. I would like to convert them to vz files. Giving they are 30 years old, the recorder I used back then was not a standard data recorder, there is only a little hope. [This link](http://www.pagetable.com/?p=32) describes how data tape encoding works on Apple I.
 
+2018-09-06<br />
+Received VZ200 16K RAM Module purchased from eBay.
+The 8 pin DIN socket on my Laser310 is actually RGB with composite Video output (Plus GND and PWR). There are SCART cables for SEGA Genesis 1 for that. I'm planning to purchase a SCART to RGBS (with LM1881 to split the Sync from Composite Video) from eBay.
+
+[1200 Baud Archeology: Reconstructing Apple I BASIC from a Cassette Tape](https://www.pagetable.com/?p=32)
+
+
 2017-03-29<br />
 [3ChipVZ](http://intertek00.customer.netspace.net.au/3ChipVZ/), Trying to recreate Laser200/310 with Teensy <br />
 
