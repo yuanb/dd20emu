@@ -14,6 +14,21 @@ Todo list:
 * Design a 16K SRAM extension card to Laser 200
 * I have about 2.25 hours length of Laser 310 data tape. They are Demo, Utilities, Games, Basic program I wrote etc. I would like to convert them to vz files. Giving they are 30 years old, the recorder I used back then was not a standard data recorder, there is only a little hope. [This link](http://www.pagetable.com/?p=32) describes how data tape encoding works on Apple I.
 
+2019-02-02  
+These two screen shots are the IORQ /WR and /RD requests from [Laser310_FPGA](https://github.com/zzemu-cn/LASER310_FPGA) GPIO output, decoded by 74AC138 chip(Vcc 3.3v). Y1 is the output while Laser 310 runs the following 2 lines of code.  
+
+~~~
+10 out 1,1
+20 goto 10
+~~~
+
+IORQ /RD  
+[![IORQ read request on port #1](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/IO%20read.png)](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/IO%20read.png)
+  
+IQRD /WR  
+[![IORQ write request on port #1](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/IO%20write.png)](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/IO%20write.png)
+
+
 2018-09-06<br />
 Received VZ200 16K RAM Module purchased from eBay.
 The 8 pin DIN socket on my Laser310 is actually RGB with composite Video output (Plus GND and PWR). There are SCART cables for SEGA Genesis 1 for that. I'm planning to purchase a SCART to RGBS (with LM1881 to split the Sync from Composite Video) from eBay.
