@@ -14,6 +14,9 @@ Todo list:
 * Design a 16K SRAM extension card to Laser 200
 * I have about 2.25 hours length of Laser 310 data tape. They are Demo, Utilities, Games, Basic program I wrote etc. I would like to convert them to vz files. Giving they are 30 years old, the recorder I used back then was not a standard data recorder, there is only a little hope. [This link](http://www.pagetable.com/?p=32) describes how data tape encoding works on Apple I.
 
+2019-02-10
+Started working on VZ disk reading on raspberry pi zero w.  
+
 2019-02-02  
 Finally, I got some time I can get back to this project. My plan is to use the Laser31_FPGA GPIO to connect to one or two 74AC138 decoder to trigger Arduino UNO interrupt. Arduino UNO should have enough horse power to emulate DD20 floppy drive.  
 These two screen shots are the IORQ /WR and /RD requests from [Laser310_FPGA](https://github.com/zzemu-cn/LASER310_FPGA) GPIO output, decoded by 74AC138 chip(Vcc 3.3v). Y1 is the output while Laser 310 runs the following 2 lines of code.  
