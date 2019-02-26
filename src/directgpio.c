@@ -6,6 +6,11 @@
 #include <unistd.h>
 #include <sys/mman.h>
 
+//RPi GPIO Code Samples
+// https://elinux.org/RPi_GPIO_Code_Samples
+
+//Low Level Programming of the Raspberry Pi in C
+//http://www.pieter-jan.com/node/15
 
 #include <wiringPi.h>   //set priority
 
@@ -30,6 +35,12 @@
 
 #define	_EMUACK	26	//BCM 26, physical 37, orange
 
+#define PHI0(n) (((n)>>0)&1)
+#define PHI1(n) (((n)>>1)&1)
+#define PHI2(n) (((n)>>2)&1)
+#define PHI3(n) (((n)>>3)&1)
+
+/***  Direct GPIO Access ***/
 #define BCM2708_PERI_BASE        0x20000000
 #define GPIO_BASE                (BCM2708_PERI_BASE + 0x200000) /* GPIO controller */
 
@@ -87,37 +98,56 @@ void dd20emu_setup(void) {
 
 int main(int argc, char **argv)
 {
+    uint8_t vtech1_fdc_status = 0;
+    uint8_t vtech1_fdc_bits = 8;
+
     // Set up gpi pointer for direct register access
     setup_io();
 
     //piHiPri(99);
     dd20emu_setup();
 
-    volatile unsigned *gpio_read = gpio+13;
+    //volatile unsigned *gpio_read = gpio+13;
 
     while(1) {
         if (!GET_GPIO(_Y0) && !GET_GPIO(_WR)) {
             //Port #10H, write only
+            //Bit 0 ~ 3, Step motor phase control (Active high)
+            //Bit 4, Drive 1 enable (Active low)
+            //Bit 5, Write data (Active high)
+            //Bit 6, Write request (Active low)
+            //Bit 7, Drive 2 enable (Active low)
             GPIO_CLR = 1 << _EMUACK;
-            GPIO_SET = 1 << _EMUACK; 
+            GPIO_SET = 1 << _EMUACK;
         }
         else if (!GET_GPIO(_Y1) && !GET_GPIO(_RD))
         {
-            //Port #11H, read only
-            GPIO_CLR = 1 << _EMUACK;
-            GPIO_SET = 1 << _EMUACK;             
+            //Port #11H, read only, Bit 0 ~ 7 = Data byte read from disk
+            if (vtech1_fdc_bits > 0) {
+                if (vtech1_fdc_status & 0x80) {
+                    vtech1_fdc_bits--;
+                }
+                if( vtech1_fdc_bits == 0 ) {
+                    if( vtech1_fdc_status & 0x80 ) {
+                        vtech1_fdc_bits = 8;
+                    }
+                    vtech1_fdc_status &= ~0x80;    
+                }
+            }          
         }
         else if (!GET_GPIO(_Y2) && !GET_GPIO(_RD))
         {
-            //Port #12H, read only
-            GPIO_CLR = 1 << _EMUACK;
-            GPIO_SET = 1 << _EMUACK;             
+            //Port #12H, read only, Bit 7 = clock bit pulling input
+            vtech1_fdc_status |= 0x80;
+            GPIO_SET = 1 << D7;
+            while(!GET_GPIO(_Y2));
+            GPIO_CLR = 1 << D7;
         }
         else if (!GET_GPIO(_Y3) && !GET_GPIO(_RD)) {
-            //Port #13H, read only
+            //Port #13H, read only, Bit 7 = 1 write protected
             GPIO_CLR = 1 << D7;
             while(!GET_GPIO(_Y3));
-            GPIO_SET = 1 << D7;         
+            GPIO_SET = 1 << D7;     
         }
     };
 } // main
