@@ -39,7 +39,7 @@ typedef struct Sectors {
 } sector_t;
 
 typedef struct Tracks {
-	sector_t	sector[40];
+	sector_t	sector[16];
 } track_t;
 
 uint8_t fdc_data[TRKSIZE_VZ];
