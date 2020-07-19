@@ -16,7 +16,10 @@ Todo list:
 
 2020-07-19 
 This picture shows the RDData input is sent to 74LS164 A pin, and the D0 on port 11 read(FM Decoding). To get a byte, DI-40 needs to read from port 11 eight times.
-[![RD Data](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/RDData%20to%20D0%20on%20port%2011%20read.png)](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/RDData%20to%20D0%20on%20port%2011%20read.png)
+[![FM Decoding](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/RDData%20to%20D0%20on%20port%2011%20read.png)](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/RDData%20to%20D0%20on%20port%2011%20read.png)
+
+This picture shows the how Y1(Port11) reads generates D CLR(Port 12) pulse, 74LS164 CLK pulse and Port 12 polling.
+[![D Flip-flop on port 12;74ls164 CLK and polling](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/Port%2011_12%20RDData%20pulse.png)](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/Port%2011_12%20RDData%20pulse.png)
 
 2019-02-10
 Started working on VZ disk reading on raspberry pi zero w.  
