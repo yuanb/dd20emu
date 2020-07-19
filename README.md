@@ -14,6 +14,10 @@ Todo list:
 * Design a 16K SRAM extension card to Laser 200
 * I have about 2.25 hours length of Laser 310 data tape. They are Demo, Utilities, Games, Basic program I wrote etc. I would like to convert them to vz files. Giving they are 30 years old, the recorder I used back then was not a standard data recorder, there is only a little hope. [This link](http://www.pagetable.com/?p=32) describes how data tape encoding works on Apple I.
 
+2020-07-19 
+This picture shows the RDData input is sent to 74LS164 A pin, and the D0 on port 11 read(FM Decoding). To get a byte, DI-40 needs to read from port 11 eight times.
+[![RD Data](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/RDData%20to%20D0%20on%20port%2011%20read.png)](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/RDData%20to%20D0%20on%20port%2011%20read.png)
+
 2019-02-10
 Started working on VZ disk reading on raspberry pi zero w.  
 
