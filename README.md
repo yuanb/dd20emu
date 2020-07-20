@@ -7,7 +7,9 @@ Since at the moment this project is created, I only have a Laser-200 on hand, wh
 Devices I have:
 * Laser 200, Basic version 1.1, 6KB RAM.
 * Laser 310, Basic 2.0, 16K RAM.
-* 64K RAM extension cartridge for Laser 310. 
+* 16K RAM extension cartridge for Laser 200.
+* 64K RAM extension cartridge for Laser 310.
+* DD20 Floppy Drive
 
 Todo list:
 * Collect documents regarding DD20 interface and Disk image format.
