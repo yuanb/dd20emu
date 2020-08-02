@@ -8,7 +8,20 @@
 #include <SD.h>
 
 /*
- * Port 10h      Latch(write-only)
+ * Pin definitions, Arduino Mega2560
+ * GND
+ * 13,  PB7,    RD Data
+ * 2,   PE4,    /WRReq
+ * 3,   PE5,    /EnDrv
+ * 
+ * 18,  PD3,    Step3
+ * 19,  PD2,    Step2
+ * 20,  PD1,    Step1
+ * 21,  PD0,    Step0
+ */
+
+/*
+ * Port 10h     Latch(write-only)
  *      11h     DATA(read-only)
  *      12h     Pooling(read-only)
  *      13h     Write protection status(read-only)
@@ -312,6 +325,7 @@ int get_track(int n)
 #define delay_31_2us  __builtin_avr_delay_cycles (520)
 #endif
 
+//RD Data PB7
 #define RD_HIGH   PORTB |= 0x80;
 #define RD_LOW    PORTB &= ~0x80;
 
