@@ -7,12 +7,23 @@ Since at the moment this project is created, I only have a Laser-200 on hand, wh
 Devices I have:
 * Laser 200, Basic version 1.1, 6KB RAM.
 * Laser 310, Basic 2.0, 16K RAM.
-* 64K RAM extension cartridge for Laser 310. 
+* 16K RAM extension cartridge for Laser 200.
+* 64K RAM extension cartridge for Laser 310.
+* DD20 Floppy Drive
 
 Todo list:
 * Collect documents regarding DD20 interface and Disk image format.
 * Design a 16K SRAM extension card to Laser 200
 * I have about 2.25 hours length of Laser 310 data tape. They are Demo, Utilities, Games, Basic program I wrote etc. I would like to convert them to vz files. Giving they are 30 years old, the recorder I used back then was not a standard data recorder, there is only a little hope. [This link](http://www.pagetable.com/?p=32) describes how data tape encoding works on Apple I.
+
+## Updates
+
+2020-07-19 
+This picture shows the RDData input is sent to 74LS164 A pin, and the D0 on port 11 read(FM Decoding). To get a byte, DI-40 needs to read from port 11 eight times.
+[![FM Decoding](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/RDData%20to%20D0%20on%20port%2011%20read.png)](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/RDData%20to%20D0%20on%20port%2011%20read.png)
+
+This picture shows the how Y1(Port11) reads generates D CLR(Port 12) pulse, 74LS164 CLK pulse and Port 12 polling.
+[![D Flip-flop on port 12;74ls164 CLK and polling](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/Port%2011_12%20RDData%20pulse.png)](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/Port%2011_12%20RDData%20pulse.png)
 
 2019-02-10
 Started working on VZ disk reading on raspberry pi zero w.  
