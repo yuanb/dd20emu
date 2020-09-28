@@ -20,7 +20,6 @@ Todo list:
 2020-09-27
 First time track#0 is emulated.
 [![DD20emu](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/dd20emu_di_40.jpg)](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/dd20emu_di_40.jpg)
-[![DD20emu](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/dir_cmd.jpg)](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/dir_cmd.jpg)
 
 2020-09-20
 [![DI-40 Reborn](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/DI-40reborn.jpg)](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/DI-40reborn.jpg)
