@@ -59,12 +59,6 @@ typedef struct Track {
 uint8_t   fdc_data[TRKSIZE_VZ];
 uint8_t   fm_track_data[TRKSIZE_FM];
 
-
-//Emulator variables
-const int ledPin =  LED_BUILTIN;// the number of the LED pin Arduino
-//const int ledPin = 2;         //Ethernet shield
-uint8_t ledState = LOW;         // ledState used to set the LED
-
 uint8_t vtech1_fdc_latch = 0;
 uint8_t vtech1_track_x2 = 80;
 
@@ -75,11 +69,17 @@ bool old_drv_enabled = -1;
 bool old_wr_req = -1;
 int old_track = -1;
 
+//Emulator variables
+const int ledPin =  LED_BUILTIN;// the number of the LED pin Arduino
+//const int ledPin = 2;         //Ethernet shield
+uint8_t ledState = LOW;         // ledState used to set the LED
+
+const byte rdDataPin = 13;
 #define PIN_EN_REG    PINE
 #define PIN_EN_BIT    5
 #define PIN_WR_REG    PINE
 #define PIN_WRREQ_BIT 4
-const byte enPin    = 3;
+const byte enDrvPin    = 3;
 const byte wrReqPin = 2;
 
 //Mega 2560 only, ststepPin0epPin interrupt register
@@ -130,7 +130,8 @@ void setup() {
   // set the digital pin as output:
   pinMode(ledPin, OUTPUT);
 
-  pinMode(enPin, INPUT_PULLUP);
+  pinMode(enDrvPin, INPUT_PULLUP);
+  pinMode(rdDataPin, OUTPUT);
   pinMode(wrReqPin, INPUT_PULLUP);
 
   pinMode(stepPin0, INPUT_PULLUP);
@@ -138,7 +139,7 @@ void setup() {
   pinMode(stepPin2, INPUT_PULLUP);
   pinMode(stepPin3, INPUT_PULLUP);
 
-  attachInterrupt(digitalPinToInterrupt(enPin), driveEnabled, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(enDrvPin), driveEnabled, CHANGE);
   attachInterrupt(digitalPinToInterrupt(wrReqPin), writeRequest, CHANGE);
 
   Serial.println("Begin DD-20 emulation\r");
@@ -217,7 +218,7 @@ void handle_wr() {
 //Arduino interruption on pin change, nice Arduino interrupt tutorial
 //https://arduino.stackexchange.com/questions/8758/arduino-interruption-on-pin-change
 void driveEnabled() {
-  //drv_enabled = !digitalRead(enPin);
+  //drv_enabled = !digitalRead(enDrvPin);
   drv_enabled = !(PIN_EN_REG & (1 << PIN_EN_BIT));
 }
 
