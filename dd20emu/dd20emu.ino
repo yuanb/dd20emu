@@ -209,9 +209,12 @@ void handle_steps() {
   vtech1_fdc_latch = data;
 }
 
+byte current_sector = 0;
 void handle_wr() {
   if (drv_enabled && !write_request) {
-    put_track();
+    put_sector(current_sector);
+    if (++current_sector>15)
+      current_sector = 0;
   }
 }
 

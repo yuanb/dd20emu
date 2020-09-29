@@ -1,6 +1,7 @@
 //Good values
 
-//FM encoded 0 : ___n________n___ : 1.125us + 31.75us
+//FM encoded 0 : ___n__________n___ : 1.125us + 31.75us
+//FM encoded 1 : ___n___n______n___ : 1.125us + 11 us + 1.125us + 20 us
 
 
 #define delay_1us   __builtin_avr_delay_cycles (16)
@@ -71,4 +72,14 @@ void put_track()
       put_byte(v); 
     }
   }
+}
+
+void put_sector(byte i)
+{
+    sector_t *sec = (sector_t *)&fdc_data[sector_interleave[i] * sizeof(sector_t)];
+    for (int j = 0; j < SECSIZE_VZ; j++)
+    {
+      byte v = ((byte *)sec)[j];
+      put_byte(v); 
+    }
 }
