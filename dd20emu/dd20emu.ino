@@ -221,7 +221,6 @@ void handle_wr() {
 //Arduino interruption on pin change, nice Arduino interrupt tutorial
 //https://arduino.stackexchange.com/questions/8758/arduino-interruption-on-pin-change
 void driveEnabled() {
-  //drv_enabled = !digitalRead(enDrvPin);
   drv_enabled = !(PIN_EN_REG & (1 << PIN_EN_BIT));
 }
 
