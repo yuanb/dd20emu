@@ -6,6 +6,10 @@
 */
 #include <SPI.h>
 #include <SD.h>
+/*
+ * /Users/billyuan/Library/Arduino15/packages/arduino/tools/avr-gcc/7.3.0-atmel3.6.1-arduino7/bin/avr-objdump -S dd20emu.ino.elf > /Users/billyuan/Documents/Arduino/dd20emu/dd20emu.lst
+ * 
+ */
 
 /*
    Pin definitions, Arduino Mega2560
@@ -99,6 +103,7 @@ const byte stepPin0 = 21;
 #define PHI3(n) (((n)>>PIN_STEP3_BIT)&1)
 
 char filename[] = "FLOPPY1.DSK";
+File f;
 
 void serial_log( const char * format, ... )
 {
@@ -143,7 +148,15 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(wrReqPin), writeRequest, CHANGE);
 
   Serial.println("Begin DD-20 emulation\r");
-  get_track(0);
+
+  f = SD.open(filename, FILE_READ);
+  if (f == false)
+  {
+    Serial.println("DSK File is not opened");
+    return -1;
+  }
+    
+  get_track(f, 0);
 }
 
 void loop() {
@@ -158,7 +171,7 @@ void handle_drive_enable() {
   if (isEnabled != old_drv_enabled) {
     digitalWrite(LED_BUILTIN, isEnabled);
     old_drv_enabled = isEnabled;
-    serial_log("Enabled=%d", drv_enabled);
+    //serial_log("Enabled=%d", drv_enabled);
   }
 }
 
@@ -168,7 +181,7 @@ void handle_wr_request() {
 
   bool wrRequest = write_request;
   if (wrRequest != old_wr_req) {
-    serial_log("Trk: %d, %s", vtech1_track_x2 / 2, wrRequest ? "Write" : "Read");
+    //serial_log("Trk: %d, %s", vtech1_track_x2 / 2, wrRequest ? "Write" : "Read");
     old_wr_req = wrRequest;
   }
 }
@@ -177,33 +190,47 @@ void handle_steps() {
   if (!drv_enabled)
     return;
 
-  uint8_t data = PIN_STEP_REG;
-  if ( (PHI0(data) && !(PHI1(data) || PHI2(data) || PHI3(data)) && PHI1(vtech1_fdc_latch)) ||
+  uint8_t data = PIN_STEP_REG & 0x0F;
+
+  //Track--, if bit is shifted to right by 1, wrapped by 4 bits
+  if (data == 0x01 && PHI1(vtech1_fdc_latch) ||
+      data == 0x02 && PHI2(vtech1_fdc_latch) ||
+      data == 0x04 && PHI3(vtech1_fdc_latch) ||
+      data == 0x08 && PHI0(vtech1_fdc_latch))
+  /*if ( (PHI0(data) && !(PHI1(data) || PHI2(data) || PHI3(data)) && PHI1(vtech1_fdc_latch)) ||
        (PHI1(data) && !(PHI0(data) || PHI2(data) || PHI3(data)) && PHI2(vtech1_fdc_latch)) ||
        (PHI2(data) && !(PHI0(data) || PHI1(data) || PHI3(data)) && PHI3(vtech1_fdc_latch)) ||
-       (PHI3(data) && !(PHI0(data) || PHI1(data) || PHI2(data)) && PHI0(vtech1_fdc_latch)) )
+       (PHI3(data) && !(PHI0(data) || PHI1(data) || PHI2(data)) && PHI0(vtech1_fdc_latch)) )*/
   {
+    //serial_log("Trk-- : %d%d%d%d Latch: %d%d%d%d",PHI0(data),PHI1(data),PHI2(data),PHI3(data),    PHI0(vtech1_fdc_latch), PHI1(vtech1_fdc_latch), PHI2(vtech1_fdc_latch), PHI3(vtech1_fdc_latch));
     if (vtech1_track_x2 > 0)
       vtech1_track_x2--;
     if ( (vtech1_track_x2 & 1) == 0 ) {
       vtech1_get_track();
     }
     if (vtech1_track_x2 % 2 == 0) {
-      serial_log("Seek: %d", vtech1_track_x2 / 2);
+      //serial_log("Seek: %d", vtech1_track_x2 / 2);
     }
   }
-  else if ( (PHI0(data) && !(PHI1(data) || PHI2(data) || PHI3(data)) && PHI3(vtech1_fdc_latch)) ||
+  //Track++, if bit is shifted to left by 1, wrapped by 4 bits
+  else if (
+    data == 0x01 && PHI3(vtech1_fdc_latch) ||
+    data == 0x02 && PHI0(vtech1_fdc_latch) ||
+    data == 0x04 && PHI1(vtech1_fdc_latch) ||
+    data == 0x08 && PHI2(vtech1_fdc_latch))
+  /*else if ( (PHI0(data) && !(PHI1(data) || PHI2(data) || PHI3(data)) && PHI3(vtech1_fdc_latch)) ||
             (PHI1(data) && !(PHI0(data) || PHI2(data) || PHI3(data)) && PHI0(vtech1_fdc_latch)) ||
             (PHI2(data) && !(PHI0(data) || PHI1(data) || PHI3(data)) && PHI1(vtech1_fdc_latch)) ||
-            (PHI3(data) && !(PHI0(data) || PHI1(data) || PHI2(data)) && PHI2(vtech1_fdc_latch)) )
+            (PHI3(data) && !(PHI0(data) || PHI1(data) || PHI2(data)) && PHI2(vtech1_fdc_latch)) )*/    
   {
+    //serial_log("Trk++ : %d%d%d%d Latch: %d%d%d%d",PHI0(data),PHI1(data),PHI2(data),PHI3(data),    PHI0(vtech1_fdc_latch), PHI1(vtech1_fdc_latch), PHI2(vtech1_fdc_latch), PHI3(vtech1_fdc_latch));
     if ( vtech1_track_x2 < 2 * 40 )
       vtech1_track_x2++;
     if ( (vtech1_track_x2 & 1) == 0 ) {
       vtech1_get_track();
     }
     if (vtech1_track_x2 % 2 == 0) {
-      serial_log("Seek: %d", vtech1_track_x2 / 2);
+      //serial_log("Seek: %d", vtech1_track_x2 / 2);
     }
   }
   vtech1_fdc_latch = data;
@@ -213,7 +240,7 @@ byte current_sector = 0;
 void handle_wr() {
   if (drv_enabled && !write_request) {
     put_sector(current_sector);
-    if (++current_sector>15)
+    if (++current_sector >= SEC_NUM)
       current_sector = 0;
   }
 }

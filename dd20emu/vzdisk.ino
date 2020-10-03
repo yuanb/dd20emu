@@ -3,10 +3,10 @@ void vtech1_get_track() {
 
 }
 
-int get_track(int n)
+int get_track(File f, int n)
 {
   int size = TRKSIZE_VZ;
-  int offset = TRKSIZE_VZ * n;
+  unsigned long offset = (unsigned long)TRKSIZE_VZ * n;
 
   if (n < 0 || n > 39)
   {
@@ -14,21 +14,14 @@ int get_track(int n)
     return -1;
   }
 
-  File f = SD.open(filename, FILE_READ);
-  if (f == false)
-  {
-    Serial.println("DSK File is not opened");
-    return -1;
-  }
-
   if (f.seek(offset) == false)
   {
-    serial_log("Failed seek file to %d", offset);
+    serial_log("Failed seek file to %ul", offset);
     return -1;
   }
 
   //Read track
-  serial_log("Read track #%d", n);
+  //serial_log("Read track #%d", n);
 
   if (f.read(fdc_data, size) == -1)
   {
