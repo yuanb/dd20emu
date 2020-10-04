@@ -85,7 +85,17 @@ void put_sector(byte n, byte s)
     }
 }
 */
-void put_sector(File f, byte n, byte s)
+byte current_sector = 0;
+byte current_track = 0;
+void handle_wr() {
+  if (drv_enabled && !write_request) {
+    put_sector(f, current_track, current_sector);
+    if (++current_sector >= SEC_NUM)
+      current_sector = 0;
+  }
+}
+
+inline void put_sector(File f, byte n, byte s)
 {
   if (get_sector(f, n, s) != -1)
   {

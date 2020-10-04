@@ -36,8 +36,6 @@
 #define TRKSIZE_VZ  SECSIZE_VZ * SEC_NUM
 //#define DEBUG_TRACK 1
 
-#define TRKSIZE_FM  3172
-
 typedef struct SectorHeader {
   uint8_t   GAP1[7];
   uint8_t   IDAM_leading[4];
@@ -62,17 +60,12 @@ typedef struct Track {
 
 //uint8_t   fdc_data[TRKSIZE_VZ];
 uint8_t fdc_sector[SECSIZE_VZ];
+
+//#define TRKSIZE_FM  3172
 //uint8_t   fm_track_data[TRKSIZE_FM];
 
 uint8_t vtech1_fdc_latch = 0;
 uint8_t vtech1_track_x2 = 80;
-
-bool drv_enabled = false;
-bool write_request = false;
-
-bool old_drv_enabled = -1;
-bool old_wr_req = -1;
-int old_track = -1;
 
 //Emulator variables
 const int ledPin =  LED_BUILTIN;// the number of the LED pin Arduino
@@ -108,15 +101,8 @@ const byte stepPin0 = 21;
 char filename[] = "FLOPPY1.DSK";
 File f;
 
-void serial_log( const char * format, ... )
-{
-  char buffer[100];
-  va_list args;
-  va_start (args, format);
-  vsprintf (buffer, format, args);
-  Serial.println(buffer);
-  va_end (args);
-}
+extern bool drv_enabled;
+extern bool write_request;
 
 void setup() {
   Serial.begin(9600);
@@ -147,10 +133,6 @@ void setup() {
   pinMode(stepPin2, INPUT_PULLUP);
   pinMode(stepPin3, INPUT_PULLUP);
 
-  attachInterrupt(digitalPinToInterrupt(enDrvPin), driveEnabled, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(wrReqPin), writeRequest, CHANGE);
-
-  Serial.println("Begin DD-20 emulation\r");
 
   f = SD.open(filename, FILE_READ);
   if (f == false)
@@ -158,36 +140,18 @@ void setup() {
     Serial.println("DSK File is not opened");
     return -1;
   }
-    
-  //get_track(f, 0);
-  get_sector(f,0,0);
+  
+  attachInterrupt(digitalPinToInterrupt(enDrvPin), driveEnabled, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(wrReqPin), writeRequest, CHANGE);
+
+  Serial.println("Begin DD-20 emulation\r");
 }
 
 void loop() {
-  handle_drive_enable();
-  handle_wr_request();
+  //handle_drive_enable();
+  //handle_wr_request();
   handle_steps();
   handle_wr();
-}
-
-void handle_drive_enable() {
-  bool isEnabled = drv_enabled;
-  if (isEnabled != old_drv_enabled) {
-    digitalWrite(LED_BUILTIN, isEnabled);
-    old_drv_enabled = isEnabled;
-    //serial_log("Enabled=%d", drv_enabled);
-  }
-}
-
-void handle_wr_request() {
-  if (!drv_enabled)
-    return;
-
-  bool wrRequest = write_request;
-  if (wrRequest != old_wr_req) {
-    //serial_log("Trk: %d, %s", vtech1_track_x2 / 2, wrRequest ? "Write" : "Read");
-    old_wr_req = wrRequest;
-  }
 }
 
 void handle_steps() {
@@ -240,24 +204,4 @@ void handle_steps() {
     }*/
   }
   vtech1_fdc_latch = data;
-}
-
-byte current_sector = 0;
-byte current_track = 0;
-void handle_wr() {
-  if (drv_enabled && !write_request) {
-    put_sector(f, current_track, current_sector);
-    if (++current_sector >= SEC_NUM)
-      current_sector = 0;
-  }
-}
-
-//Arduino interruption on pin change, nice Arduino interrupt tutorial
-//https://arduino.stackexchange.com/questions/8758/arduino-interruption-on-pin-change
-void driveEnabled() {
-  drv_enabled = !(PIN_EN_REG & PIN_EN_MASK);
-}
-
-void writeRequest() {
-  write_request = !(PIN_WR_REG & PIN_WRREQ_MASK);
 }
