@@ -59,6 +59,7 @@ inline void put_byte(byte v)
 }
 
 int sector_interleave[SEC_NUM] = { 0, 11, 6, 1, 12, 7, 2, 13, 8, 3, 14, 9, 4, 15, 10, 5 };
+/*
 void put_track()
 {
   //for(int n=0; n<TRKSIZE_VZ; n++)
@@ -74,12 +75,24 @@ void put_track()
   }
 }
 
-void put_sector(byte i)
-{
+void put_sector(byte n, byte s)
+{    
     sector_t *sec = (sector_t *)&fdc_data[sector_interleave[i] * sizeof(sector_t)];
     for (int j = 0; j < SECSIZE_VZ; j++)
     {
       byte v = ((byte *)sec)[j];
       put_byte(v); 
     }
+}
+*/
+void put_sector(File f, byte n, byte s)
+{
+  if (get_sector(f, n, s) != -1)
+  {
+    for(int j=0; j < SECSIZE_VZ; j++)
+    {
+      byte v = (byte *)fdc_sector[j];
+      put_byte(v);
+    }
+  }
 }

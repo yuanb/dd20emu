@@ -60,8 +60,9 @@ typedef struct Track {
   sector_t    sector[16];
 } track_t;
 
-uint8_t   fdc_data[TRKSIZE_VZ];
-uint8_t   fm_track_data[TRKSIZE_FM];
+//uint8_t   fdc_data[TRKSIZE_VZ];
+uint8_t fdc_sector[SECSIZE_VZ];
+//uint8_t   fm_track_data[TRKSIZE_FM];
 
 uint8_t vtech1_fdc_latch = 0;
 uint8_t vtech1_track_x2 = 80;
@@ -79,10 +80,12 @@ const int ledPin =  LED_BUILTIN;// the number of the LED pin Arduino
 uint8_t ledState = LOW;         // ledState used to set the LED
 
 const byte rdDataPin = 13;
-#define PIN_EN_REG    PINE
-#define PIN_EN_BIT    5
-#define PIN_WR_REG    PINE
-#define PIN_WRREQ_BIT 4
+#define PIN_EN_REG      PINE
+#define PIN_EN_BIT      5
+#define PIN_EN_MASK     0x20      //1 << PIN_EN_MASK
+#define PIN_WR_REG      PINE
+#define PIN_WRREQ_BIT   4
+#define PIN_WRREQ_MASK  0x10      //1 << PIN_WRREQ_BIT
 const byte enDrvPin    = 3;
 const byte wrReqPin = 2;
 
@@ -156,7 +159,8 @@ void setup() {
     return -1;
   }
     
-  get_track(f, 0);
+  //get_track(f, 0);
+  get_sector(f,0,0);
 }
 
 void loop() {
@@ -192,7 +196,7 @@ void handle_steps() {
 
   uint8_t data = PIN_STEP_REG & 0x0F;
 
-  //Track--, if bit is shifted to right by 1, wrapped by 4 bits
+  //Track--, if current bit is shifted to right by 1, wrapped by 4 bits
   if (data == 0x01 && PHI1(vtech1_fdc_latch) ||
       data == 0x02 && PHI2(vtech1_fdc_latch) ||
       data == 0x04 && PHI3(vtech1_fdc_latch) ||
@@ -205,14 +209,15 @@ void handle_steps() {
     //serial_log("Trk-- : %d%d%d%d Latch: %d%d%d%d",PHI0(data),PHI1(data),PHI2(data),PHI3(data),    PHI0(vtech1_fdc_latch), PHI1(vtech1_fdc_latch), PHI2(vtech1_fdc_latch), PHI3(vtech1_fdc_latch));
     if (vtech1_track_x2 > 0)
       vtech1_track_x2--;
+    /*
     if ( (vtech1_track_x2 & 1) == 0 ) {
       vtech1_get_track();
     }
     if (vtech1_track_x2 % 2 == 0) {
-      //serial_log("Seek: %d", vtech1_track_x2 / 2);
-    }
+      serial_log("Seek: %d", vtech1_track_x2 / 2);
+    }*/
   }
-  //Track++, if bit is shifted to left by 1, wrapped by 4 bits
+  //Track++, if current bit is shifted to left by 1, wrapped by 4 bits
   else if (
     data == 0x01 && PHI3(vtech1_fdc_latch) ||
     data == 0x02 && PHI0(vtech1_fdc_latch) ||
@@ -226,20 +231,22 @@ void handle_steps() {
     //serial_log("Trk++ : %d%d%d%d Latch: %d%d%d%d",PHI0(data),PHI1(data),PHI2(data),PHI3(data),    PHI0(vtech1_fdc_latch), PHI1(vtech1_fdc_latch), PHI2(vtech1_fdc_latch), PHI3(vtech1_fdc_latch));
     if ( vtech1_track_x2 < 2 * 40 )
       vtech1_track_x2++;
+    /*
     if ( (vtech1_track_x2 & 1) == 0 ) {
       vtech1_get_track();
     }
     if (vtech1_track_x2 % 2 == 0) {
-      //serial_log("Seek: %d", vtech1_track_x2 / 2);
-    }
+      serial_log("Seek: %d", vtech1_track_x2 / 2);
+    }*/
   }
   vtech1_fdc_latch = data;
 }
 
 byte current_sector = 0;
+byte current_track = 0;
 void handle_wr() {
   if (drv_enabled && !write_request) {
-    put_sector(current_sector);
+    put_sector(f, current_track, current_sector);
     if (++current_sector >= SEC_NUM)
       current_sector = 0;
   }
@@ -248,9 +255,9 @@ void handle_wr() {
 //Arduino interruption on pin change, nice Arduino interrupt tutorial
 //https://arduino.stackexchange.com/questions/8758/arduino-interruption-on-pin-change
 void driveEnabled() {
-  drv_enabled = !(PIN_EN_REG & (1 << PIN_EN_BIT));
+  drv_enabled = !(PIN_EN_REG & PIN_EN_MASK);
 }
 
 void writeRequest() {
-  write_request = !(PIN_WR_REG & (1 << PIN_WRREQ_BIT));
+  write_request = !(PIN_WR_REG & PIN_WRREQ_MASK);
 }

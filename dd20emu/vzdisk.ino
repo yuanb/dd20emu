@@ -3,6 +3,25 @@ void vtech1_get_track() {
 
 }
 
+int get_sector(File f, int n, int s)
+{
+  unsigned long offset = (unsigned long)TRKSIZE_VZ * n+ s*SECSIZE_VZ;
+  if (f.seek(offset) == false)
+  {
+    serial_log("Failed to seek file to %ul", offset);
+    return -1;
+  }
+
+  if (f.read(fdc_sector, SECSIZE_VZ) == -1)
+  {
+    serial_log("Failed to read track %d, sector %d", n, s);
+    return -1;
+  }
+
+  return 0;
+}
+
+/*
 int get_track(File f, int n)
 {
   int size = TRKSIZE_VZ;
@@ -29,7 +48,7 @@ int get_track(File f, int n)
     return -1;
   }
 
-  serial_log("Trk %d is ready", n);
+  serial_log("Trk %d, Sector %d is ready", n,s);
 
 #ifdef  DEBUG_TRACK
   for (int i = 0; i < SEC_NUM; i++)
@@ -68,4 +87,7 @@ int get_track(File f, int n)
     serial_log("\r\nNext TR: %02X, Next SC: %02X", sec->next_track, sec->next_sector);
   }
 #endif
+
+  return 0;
 }
+*/
