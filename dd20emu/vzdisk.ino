@@ -1,8 +1,3 @@
-
-void vtech1_get_track() {
-
-}
-
 int get_sector(File f, int n, int s)
 {
   unsigned long offset = (unsigned long)TRKSIZE_VZ * n+ s*SECSIZE_VZ;
