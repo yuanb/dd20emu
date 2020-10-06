@@ -79,8 +79,8 @@ const byte rdDataPin = 13;
 #define PIN_WR_REG      PINE
 #define PIN_WRREQ_BIT   4
 #define PIN_WRREQ_MASK  0x10      //1 << PIN_WRREQ_BIT
-const byte enDrvPin    = 3;
-const byte wrReqPin = 2;
+const byte enDrvPin     = 3;
+const byte wrReqPin     = 2;
 
 //Mega 2560 only, ststepPin0epPin interrupt register
 #define PIN_STEP_REG    PIND  // interrupt 0 is on AVR pin PD2
@@ -88,16 +88,18 @@ const byte wrReqPin = 2;
 #define PIN_STEP2_BIT   2
 #define PIN_STEP1_BIT   1
 #define PIN_STEP0_BIT   0
-const byte stepPin3 = 18;
-const byte stepPin2 = 19;
-const byte stepPin1 = 20;
+
 const byte stepPin0 = 21;
+const byte stepPin1 = 20;
+const byte stepPin2 = 19;
+const byte stepPin3 = 18;
 
 #define PHI0(n) (((n)>>PIN_STEP0_BIT)&1)
 #define PHI1(n) (((n)>>PIN_STEP1_BIT)&1)
 #define PHI2(n) (((n)>>PIN_STEP2_BIT)&1)
 #define PHI3(n) (((n)>>PIN_STEP3_BIT)&1)
 
+//char filename[] PROGMEM = "HELLO.DSK";
 char filename[] = "FLOPPY1.DSK";
 File f;
 
@@ -139,21 +141,31 @@ void setup() {
   {
     Serial.println("DSK File is not opened");
     return -1;
-  }
-  
-  attachInterrupt(digitalPinToInterrupt(enDrvPin), driveEnabled, CHANGE);
+  }    
+
   attachInterrupt(digitalPinToInterrupt(wrReqPin), writeRequest, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(enDrvPin), driveEnabled, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(stepPin0), handle_steps, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(stepPin1), handle_steps, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(stepPin2), handle_steps, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(stepPin3), handle_steps, CHANGE);
 
   Serial.println("Begin DD-20 emulation\r");
 }
 
+uint8_t old_vtech1_track_x2 = 81;
 void loop() {
   //handle_drive_enable();
   //handle_wr_request();
-  handle_steps();
+  //handle_steps();
+  //if (old_vtech1_track_x2 != vtech1_track_x2) {
+  //  old_vtech1_track_x2 = vtech1_track_x2;
+  //  serial_log("%d", old_vtech1_track_x2);
+  //}
   handle_wr();
 }
 
+extern byte current_track;
 void handle_steps() {
   if (!drv_enabled)
     return;
@@ -173,13 +185,9 @@ void handle_steps() {
     //serial_log("Trk-- : %d%d%d%d Latch: %d%d%d%d",PHI0(data),PHI1(data),PHI2(data),PHI3(data),    PHI0(vtech1_fdc_latch), PHI1(vtech1_fdc_latch), PHI2(vtech1_fdc_latch), PHI3(vtech1_fdc_latch));
     if (vtech1_track_x2 > 0)
       vtech1_track_x2--;
-    /*
-    if ( (vtech1_track_x2 & 1) == 0 ) {
-      vtech1_get_track();
-    }
     if (vtech1_track_x2 % 2 == 0) {
-      serial_log("Seek: %d", vtech1_track_x2 / 2);
-    }*/
+      //serial_log("Seek: %d", vtech1_track_x2 / 2);
+    }
   }
   //Track++, if current bit is shifted to left by 1, wrapped by 4 bits
   else if (
@@ -195,13 +203,9 @@ void handle_steps() {
     //serial_log("Trk++ : %d%d%d%d Latch: %d%d%d%d",PHI0(data),PHI1(data),PHI2(data),PHI3(data),    PHI0(vtech1_fdc_latch), PHI1(vtech1_fdc_latch), PHI2(vtech1_fdc_latch), PHI3(vtech1_fdc_latch));
     if ( vtech1_track_x2 < 2 * 40 )
       vtech1_track_x2++;
-    /*
-    if ( (vtech1_track_x2 & 1) == 0 ) {
-      vtech1_get_track();
-    }
     if (vtech1_track_x2 % 2 == 0) {
-      serial_log("Seek: %d", vtech1_track_x2 / 2);
-    }*/
+      //serial_log("Seek: %d", vtech1_track_x2 / 2);
+    }
   }
   vtech1_fdc_latch = data;
 }

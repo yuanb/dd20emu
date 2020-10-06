@@ -23,29 +23,6 @@ byte bitmask[8] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
 
 #define FM_OUTPUT_BIT(v,m) { RD_HIGH; delay_1us; RD_LOW;  FM_ENCODE_BIT(v,m); }
 
-#if 0
-inline void put_byte(byte b)
-{
-
-  for (int i = 0; i < 8; i++)
-  {
-    //Clock bit
-    RD_HIGH; delay_1us; RD_LOW;
-
-    if (b & bitmask[i])
-    {
-      delay_11us;
-      RD_HIGH; delay_1us; RD_LOW;
-      delay_20us;
-    }
-    else
-    {
-      delay_31_2us;
-    }
-  }
-}
-#endif
-
 inline void put_byte(byte v)
 {
   FM_OUTPUT_BIT(v,bitmask[0]);
@@ -58,8 +35,8 @@ inline void put_byte(byte v)
   FM_OUTPUT_BIT(v,bitmask[7]);
 }
 
-int sector_interleave[SEC_NUM] = { 0, 11, 6, 1, 12, 7, 2, 13, 8, 3, 14, 9, 4, 15, 10, 5 };
 /*
+int sector_interleave[SEC_NUM] = { 0, 11, 6, 1, 12, 7, 2, 13, 8, 3, 14, 9, 4, 15, 10, 5 };
 void put_track()
 {
   //for(int n=0; n<TRKSIZE_VZ; n++)
@@ -74,22 +51,11 @@ void put_track()
     }
   }
 }
-
-void put_sector(byte n, byte s)
-{    
-    sector_t *sec = (sector_t *)&fdc_data[sector_interleave[i] * sizeof(sector_t)];
-    for (int j = 0; j < SECSIZE_VZ; j++)
-    {
-      byte v = ((byte *)sec)[j];
-      put_byte(v); 
-    }
-}
 */
 byte current_sector = 0;
-byte current_track = 0;
 void handle_wr() {
   if (drv_enabled && !write_request) {
-    put_sector(f, current_track, current_sector);
+    put_sector(f, vtech1_track_x2/2, current_sector);
     if (++current_sector >= SEC_NUM)
       current_sector = 0;
   }

@@ -12,13 +12,7 @@ int get_sector(File f, int n, int s)
     return -1;
   }
 
-  if (f.read(fdc_sector, SECSIZE_VZ) == -1)
-  {
-    serial_log("Failed to read track %d, sector %d", n, s);
-    return -1;
-  }
-
-  return 0;
+  return f.read(fdc_sector, SECSIZE_VZ);
 }
 
 /*
