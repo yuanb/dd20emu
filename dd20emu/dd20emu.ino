@@ -30,6 +30,14 @@
         12h     Pooling(read-only)
         13h     Write protection status(read-only)
 */
+
+/**
+ * Disk image formats:
+    1. file size 98,560 bytes, 40 tracks x 16 sectors x 154 bytes
+ *  2. file size 99184 bytes
+ *  3. file size is 99200 bytes
+ */
+
 #define TRK_NUM    40
 #define SEC_NUM     16
 #define SECSIZE_VZ  154
@@ -37,13 +45,13 @@
 //#define DEBUG_TRACK 1
 
 typedef struct SectorHeader {
-  uint8_t   GAP1[7];
-  uint8_t   IDAM_leading[4];
+  uint8_t   GAP1[7];    //0x80 6 times, 0x00
+  uint8_t   IDAM_leading[4];  //FE, E7, 18. C3
   uint8_t   TR;
   uint8_t   SC;
   uint8_t   TS_sum;
-  uint8_t   GAP2[6];
-  uint8_t   IDAM_closing[4];
+  uint8_t   GAP2[6];    //0x80 5 times, 0x00
+  uint8_t   IDAM_closing[4];  //C3, 18, E7, FE
 } sec_hdr_t;
 
 typedef struct Sector {
@@ -99,8 +107,12 @@ const byte stepPin3 = 18;
 #define PHI2(n) (((n)>>PIN_STEP2_BIT)&1)
 #define PHI3(n) (((n)>>PIN_STEP3_BIT)&1)
 
-//char filename[] PROGMEM = "HELLO.DSK";
+//Disk image format 1, FLOPPY1.DSK and FLOPPY2.DSK
+//Penguin wont load, D1B and VZCAVE wont run. The rest are ok
 char filename[] = "FLOPPY1.DSK";
+
+//Disk image format 2 (formatted from vzemu)
+//char filename[] = "HELLO.DSK";
 File f;
 
 extern bool drv_enabled;
@@ -155,12 +167,5 @@ void setup() {
 
 uint8_t old_vtech1_track_x2 = 81;
 void loop() {
-  //handle_drive_enable();
-  //handle_wr_request();
-  //handle_steps();
-  //if (old_vtech1_track_x2 != vtech1_track_x2) {
-  //  old_vtech1_track_x2 = vtech1_track_x2;
-  //  serial_log("%d", old_vtech1_track_x2);
-  //}
   handle_wr();
 }
