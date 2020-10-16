@@ -4,6 +4,8 @@
    Author: Bill Yow
 
 */
+#define SKETCH_VERSION "0.0.2"
+
 #include <SPI.h>
 #include <SD.h>
 /*
@@ -34,7 +36,8 @@
 #define TRK_NUM     40
 #define SEC_NUM     16
 #define SECSIZE_VZ  154
-#define TRKSIZE_VZ  SECSIZE_VZ * SEC_NUM
+#define TRKSIZE_VZ  SECSIZE_VZ * SEC_NUM    //2464
+#define TRKSIZE_VZ_PADDED TRKSIZE_VZ + 16
 
 //Emulator variables
 const int ledPin =  LED_BUILTIN;// the number of the LED pin Arduino
@@ -53,10 +56,13 @@ const byte stepPin3 = 18;
 
 //Disk image format 1, FLOPPY1.DSK and FLOPPY2.DSK
 //Penguin wont load, D1B and VZCAVE wont run. The rest are ok
-//char filename[] = "FLOPPY1.DSK";
+char filename[] = "FLOPPY1.DSK";
 
 //Disk image format 2 (formatted from vzemu)
-char filename[] = "HELLO.DSK";
+//char filename[] = "HELLO.DSK";
+
+//Disk image format 2(created from empty file from vzemu)
+//char filename[] = "20201016.DSK";
 File f;
 
 extern bool drv_enabled;
@@ -67,6 +73,8 @@ void setup() {
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
+
+  serial_log("\r\n\r\nVTech DD20 emulator, v%s\r\n", SKETCH_VERSION);
 
   if (!SD.begin())
   {
@@ -99,6 +107,7 @@ void setup() {
   }
 
   set_track_padding(f);
+  build_sector_lut(f);
 
   attachInterrupt(digitalPinToInterrupt(wrReqPin), writeRequest, CHANGE);
   attachInterrupt(digitalPinToInterrupt(enDrvPin), driveEnabled, CHANGE);

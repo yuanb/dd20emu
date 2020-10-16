@@ -32,6 +32,6 @@ void serial_log( const char * format, ... )
   va_list args;
   va_start (args, format);
   vsprintf (buffer, format, args);
-  Serial.println(buffer);
+  Serial.print(buffer);
   va_end (args);
 }

@@ -39,8 +39,9 @@ uint8_t padding = 0;
 void set_track_padding(File f)
 {
   unsigned long fsize = f.size();
+  
   if (fsize == 98560) {
-    serial_log("%s is format 1 image", filename);
+    serial_log("%s is type 1 image, no padding.\r\n", filename);
     padding = 0;
   }
   else if (fsize == 99184 || fsize == 99200)
@@ -61,39 +62,78 @@ void set_track_padding(File f)
     }
     if (padding_found) {
       padding = 16;
-      serial_log("%s is format 2/3 image, padding = %d", filename, padding);
+      serial_log("%s is type 2/3 image, padding = %d bytes\r\n", filename, padding);
     }
   }  
+}
+
+unsigned long sector_lut[40][16] = { 0 };
+
+void build_sector_lut(File f)
+{
+  uint8_t buf[13] = {0};
+  uint8_t n[1] = {0};
+  unsigned long offset = 0;
+  uint16_t sectors = 0;
+  uint16_t elapsed = 0;
+  int sector_interleave[SEC_NUM] = { 0, 11, 6, 1, 12, 7, 2, 13, 8, 3, 14, 9, 4, 15, 10, 5 };
+  int i[SEC_NUM] = {0, 3, 6, 9, 12, 15, 2, 5, 8, 11, 14, 1, 4, 7, 10, 13};
+
+  serial_log("Start building sector LUT.\r\n");
+  elapsed = millis();
+
+  while(offset <(f.size()-13)) {
+    f.seek(offset);
+    f.read(buf,13);
+
+    if (buf[0] == 0x80 && buf[1] == 0x80 && buf[2] == 0x80 && buf[3] == 0x80 && buf[4] == 0x80 && buf[5] == 0x80 &&
+        buf[6] == 0x00 && buf[7] == 0xFE && buf[8] == 0xE7 && buf[9] == 0x18 && buf[10]== 0xC3)
+    {
+      //Exceptional sector size: 155, trim the first byte
+      sector_lut[buf[11]][i[buf[12]]] = offset+1;
+
+      offset += (13+ 141);
+      sectors++;
+      //if this is the last sector of  
+      if (buf[12] == 0x05 && padding!=0) {
+        offset += 15; //+15 or 16
+      }
+    }
+    else if (buf[0] == 0x80 && buf[1] == 0x80 && buf[2] == 0x80 && buf[3] == 0x80 && buf[4] == 0x80 && buf[5] == 0x00 &&
+        buf[6] == 0xFE && buf[7] == 0xE7 && buf[8] == 0x18 && buf[9] == 0xC3)
+    {
+      sector_lut[buf[10]][i[buf[11]]] = offset;
+      
+      offset += (12 + 141);
+      sectors++;      
+      //if this is the last sector of  
+      if (buf[11] == 0x05 && padding!=0) {
+        offset += 15;
+      }
+    }
+    else {
+      offset++;
+    }
+  }
+
+  serial_log("Finished, used %d ms.\r\n", millis()-elapsed);
+  serial_log("Sectors found: %d\r\n", sectors);
 }
 
 int get_sector(File f, uint8_t n, uint8_t s)
 {
   int result = -1;
   int sector_interleave[SEC_NUM] = { 0, 11, 6, 1, 12, 7, 2, 13, 8, 3, 14, 9, 4, 15, 10, 5 };
-  unsigned long sector_offset[40][16] = {
-    { 0x0, 0x9b, 0x135, 0x1cf, 0x269, 0x303, 0x39d, 0x437, 0x4d1, 
-  }
   if (n<TRK_NUM && s<SEC_NUM)
   {
-    unsigned long offset = track_offset[n] + sec_offset[s];
-
-    if (f.seek(offset) != false)
+    if (f.seek(sector_lut[n][s]) != false)
     { 
       result= f.read(fdc_sector, SECSIZE_VZ);
-      if (fdc_sector[0] == 0x80 && fdc_sector[1] == 0x80 && fdc_sector[2] == 0x80 &&
-        fdc_sector[3] == 0x80 && fdc_sector[4] == 0x80 && fdc_sector[5] == 0x80 &&
-        fdc_sector[6] == 0x00 && fdc_sector[7] == 0xFE && fdc_sector[8] == 0xE7 &&
-        fdc_sector[9] == 0x18 && fdc_sector[10]== 0xC3 && 
-        fdc_sector[11]== n    && fdc_sector[12]== sector_interleave[s]) {
-      } else {
-        serial_log("Not a hdr at 0x%04x, requested T:%02x, S:%02x", offset, n, sector_interleave[s]);
-      }      
     }
     else {
-      serial_log("Failed to seek 0x%04x for T:%02x, S:%02x", offset, n, s);      
+      serial_log("File seek error at T:%d, S:%d\r\n", n, s);
     }
   }
-
   return result;
 }
 
