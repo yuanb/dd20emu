@@ -28,7 +28,7 @@ void handle_wr_request() {
 
 void serial_log( const char * format, ... )
 {
-  char buffer[100];
+  char buffer[256];
   va_list args;
   va_start (args, format);
   vsprintf (buffer, format, args);
