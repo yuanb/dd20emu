@@ -18,12 +18,15 @@ Todo list:
 
 ## Updates
 2020-11/01
+
 Sector lut finished. Tested with hello.dsk disk image. 
 
 2020-09-20
+
 [![DI-40 Reborn](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/DI-40reborn.jpg)](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/DI-40reborn.jpg)
 
 2020-07-19 
+
 This picture shows the RDData input is sent to 74LS164 A pin, and the D0 on port 11 read(FM Decoding). To get a byte, DI-40 needs to read from port 11 eight times.
 [![FM Decoding](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/RDData%20to%20D0%20on%20port%2011%20read.png)](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/RDData%20to%20D0%20on%20port%2011%20read.png)
 
@@ -31,9 +34,11 @@ This picture shows the how Y1(Port11) reads generates D CLR(Port 12) pulse, 74LS
 [![D Flip-flop on port 12;74ls164 CLK and polling](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/Port%2011_12%20RDData%20pulse.png)](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/Port%2011_12%20RDData%20pulse.png)
 
 2019-02-10
+
 Started working on VZ disk reading on raspberry pi zero w.  
 
 2019-02-02  
+
 Finally, I got some time I can get back to this project. My plan is to use the Laser31_FPGA GPIO to connect to one or two 74AC138 decoder to trigger Arduino UNO interrupt. Arduino UNO should have enough horse power to emulate DD20 floppy drive.  
 These two screen shots are the IORQ /WR and /RD requests from [Laser310_FPGA](https://github.com/zzemu-cn/LASER310_FPGA) GPIO output, decoded by 74AC138 chip(Vcc 3.3v). Y1 is the output while Laser 310 runs the following 2 lines of code.  
 
@@ -49,17 +54,20 @@ IQRD /WR
 [![IORQ write request on port #1](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/IO%20write.png)](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/IO%20write.png)
 
 
-2018-09-06<br />
+2018-09-06
+
 Received VZ200 16K RAM Module purchased from eBay.
 The 8 pin DIN socket on my Laser310 is actually RGB with composite Video output (Plus GND and PWR). There are SCART cables for SEGA Genesis 1 for that. I'm planning to purchase a SCART to RGBS (with LM1881 to split the Sync from Composite Video) from eBay.
 
 [1200 Baud Archeology: Reconstructing Apple I BASIC from a Cassette Tape](https://www.pagetable.com/?p=32)
 
 
-2017-03-29<br />
+2017-03-29
+
 [3ChipVZ](http://intertek00.customer.netspace.net.au/3ChipVZ/), Trying to recreate Laser200/310 with Teensy <br />
 
-2017-03-01<br />
+2017-03-01
+
 With some patience, I manually decoded the Laser310 tape recording header in Audacity. Click on the images to see full pictures.Bit pulses are 1: three low/short pulses, 0: one low/short and one cycle of high/long pulses.<br />
 Laser200/Laser310's cassette port operates at 600 bps Baud rate. This is a snapshot of the cassette waveforms found in VZ300 technical manual<br />
 [![Laser 310 cassette waveforms](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/cassette_waveforms.png)](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/cassette_waveforms.png)
@@ -77,7 +85,8 @@ It seems the Laser310 cassette program recording header is :<br />
 
 Here is a [ASCII Chart](http://www.bluesock.org/~willg/dev/ascii.html)
 
-2017-02-20<br />
+2017-02-20
+
 Created dd20emu project on github.
 
 ### Some useful links
