@@ -7,7 +7,7 @@ inline void handle_drive_enable() {
   if (isEnabled != old_drv_enabled) {
     digitalWrite(LED_BUILTIN, isEnabled);
     old_drv_enabled = isEnabled;
-    //serial_log("Enabled=%d", drv_enabled);
+    //serial_log(PSTR("Enabled=%d"), drv_enabled);
   }
 }
 
@@ -21,17 +21,22 @@ void handle_wr_request() {
 
   bool wrRequest = write_request;
   if (wrRequest != old_wr_req) {
-    //serial_log("Trk: %d, %s", vtech1_track_x2 / 2, wrRequest ? "Write" : "Read");
+    //serial_log(PSTR("Trk: %d, %s"), vtech1_track_x2 / 2, wrRequest ? "Write" : "Read");
     old_wr_req = wrRequest;
   }
 }
 
 void serial_log( const char * format, ... )
 {
-  char buffer[100];
+  char buffer[256];
   va_list args;
   va_start (args, format);
-  vsprintf (buffer, format, args);
-  Serial.println(buffer);
+#ifdef __AVR__
+    vsnprintf_P(buffer, sizeof(buffer), (const char *)format, args);     // progmem for AVR
+#else
+    vsnprintf(buffer, sizeof(buffer), (const char *)format, args);     // for the rest of the world
+#endif  
+//  vsprintf (buffer, format, args);
+  Serial.print(buffer);
   va_end (args);
 }

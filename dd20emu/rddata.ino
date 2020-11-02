@@ -52,19 +52,20 @@ void put_track()
   }
 }
 */
-byte current_sector = 0;
+uint8_t current_sector = 0;
 void handle_wr() {
   if (drv_enabled && !write_request) {
-    put_sector(f, vtech1_track_x2/2, current_sector);
+    put_sector((uint8_t)vtech1_track_x2/2, current_sector);
     if (++current_sector >= SEC_NUM)
-      current_sector = 0;
+      current_sector = 0;      
   }
 }
 
-inline void put_sector(File f, byte n, byte s)
+extern uint8_t fdc_sector[SECSIZE_VZ];
+inline void put_sector(uint8_t n, uint8_t s)
 {
   if (get_sector(f, n, s) != -1)
-  {
+  {     
     for(int j=0; j < SECSIZE_VZ; j++)
     {
       byte v = (byte *)fdc_sector[j];
