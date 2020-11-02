@@ -4,7 +4,6 @@
    Author: Bill Yow
 
 */
-#define SKETCH_VERSION "0.0.2"
 
 #include <SPI.h>
 #include <SD.h>
@@ -56,13 +55,17 @@ const byte stepPin3 = 18;
 
 //Disk image format 1, FLOPPY1.DSK and FLOPPY2.DSK
 //Penguin wont load, D1B and VZCAVE wont run. The rest are ok
-char filename[] = "FLOPPY1.DSK";
+//char filename[] = "FLOPPY1.DSK";
 
-//Disk image format 2 (formatted from vzemu)
-//char filename[] = "HELLO.DSK";
+//Disk image format 2 (formatted from vzemu), fsize = 99185
+char filename[] = "HELLO.DSK";
 
 //Disk image format 2(created from empty file from vzemu)
 //char filename[] = "20201016.DSK";
+
+//Disk image format 2?
+//char filename[] ="extbasic.dsk";
+
 File f;
 
 extern bool drv_enabled;
@@ -74,16 +77,16 @@ void setup() {
     ; // wait for serial port to connect. Needed for native USB port only
   }
 
-  serial_log("\r\n\r\nVTech DD20 emulator, v%s\r\n", SKETCH_VERSION);
+  serial_log(PSTR("\r\n\r\nVTech DD20 emulator, v0.0.3, 11/1/2020\r\n"));
 
   if (!SD.begin())
   {
-    Serial.println("Failed to begin on SD");
+    serial_log(PSTR("Failed to begin on SD"));
   }
 
   if (!SD.exists(filename))
   {
-    Serial.println("Can't find FLOPPY1.DSK");
+    serial_log(PSTR("Can't find FLOPPY1.DSK"));
   }
 
   // put your setup code here, to run once:
@@ -102,7 +105,7 @@ void setup() {
   f = SD.open(filename, FILE_READ);
   if (f == false)
   {
-    Serial.println("DSK File is not opened");
+    serial_log(PSTR("DSK File is not opened"));
     return -1;
   }
 
@@ -116,7 +119,7 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(stepPin2), handle_steps, CHANGE);
   attachInterrupt(digitalPinToInterrupt(stepPin3), handle_steps, CHANGE);
 
-  Serial.println("Begin DD-20 emulation\r");
+  serial_log(PSTR("Begin DD-20 emulation"));
 }
 
 void loop() {

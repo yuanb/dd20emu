@@ -1,6 +1,8 @@
 
 uint8_t vtech1_fdc_latch = 0;
-uint8_t vtech1_track_x2 = 80;
+
+#define PARKED_TRACK 0   //80
+uint8_t vtech1_track_x2 = PARKED_TRACK;
 
 //Mega 2560 only, ststepPin0epPin interrupt register
 #define PIN_STEP_REG    PIND  // interrupt 0 is on AVR pin PD2
@@ -30,7 +32,7 @@ void handle_steps() {
        (PHI2(data) && !(PHI0(data) || PHI1(data) || PHI3(data)) && PHI3(vtech1_fdc_latch)) ||
        (PHI3(data) && !(PHI0(data) || PHI1(data) || PHI2(data)) && PHI0(vtech1_fdc_latch)) )*/
   {
-    //serial_log("Trk-- : %d%d%d%d Latch: %d%d%d%d",PHI0(data),PHI1(data),PHI2(data),PHI3(data),    PHI0(vtech1_fdc_latch), PHI1(vtech1_fdc_latch), PHI2(vtech1_fdc_latch), PHI3(vtech1_fdc_latch));
+    //serial_log(PSTR("Trk-- : %d%d%d%d Latch: %d%d%d%d"),PHI0(data),PHI1(data),PHI2(data),PHI3(data),    PHI0(vtech1_fdc_latch), PHI1(vtech1_fdc_latch), PHI2(vtech1_fdc_latch), PHI3(vtech1_fdc_latch));
     if (vtech1_track_x2 > 0)
       vtech1_track_x2--;
   }
@@ -45,7 +47,7 @@ void handle_steps() {
             (PHI2(data) && !(PHI0(data) || PHI1(data) || PHI3(data)) && PHI1(vtech1_fdc_latch)) ||
             (PHI3(data) && !(PHI0(data) || PHI1(data) || PHI2(data)) && PHI2(vtech1_fdc_latch)) )*/    
   {
-    //serial_log("Trk++ : %d%d%d%d Latch: %d%d%d%d",PHI0(data),PHI1(data),PHI2(data),PHI3(data),    PHI0(vtech1_fdc_latch), PHI1(vtech1_fdc_latch), PHI2(vtech1_fdc_latch), PHI3(vtech1_fdc_latch));
+    //serial_log(PSTR("Trk++ : %d%d%d%d Latch: %d%d%d%d"),PHI0(data),PHI1(data),PHI2(data),PHI3(data),    PHI0(vtech1_fdc_latch), PHI1(vtech1_fdc_latch), PHI2(vtech1_fdc_latch), PHI3(vtech1_fdc_latch));
     if ( vtech1_track_x2 < 2 * TRK_NUM )
       vtech1_track_x2++;
   }
