@@ -6,7 +6,7 @@
 */
 
 #include <SPI.h>
-#include <SD.h>
+#include "SdFat.h"
 /*
  * /Users/billyuan/Library/Arduino15/packages/arduino/tools/avr-gcc/7.3.0-atmel3.6.1-arduino7/bin/avr-objdump -S dd20emu.ino.elf > /Users/billyuan/Documents/Arduino/dd20emu/dd20emu.lst
  * 
@@ -53,6 +53,10 @@ const byte stepPin1 = 20;
 const byte stepPin2 = 19;
 const byte stepPin3 = 18;
 
+/*****************/
+/*  SD FILE      */
+/*****************/
+
 //Disk image format 1, FLOPPY1.DSK and FLOPPY2.DSK
 //Penguin wont load, D1B and VZCAVE wont run. The rest are ok
 //char filename[] = "FLOPPY1.DSK";
@@ -66,7 +70,11 @@ char filename[] = "HELLO.DSK";
 //Disk image format 2?
 //char filename[] ="extbasic.dsk";
 
-File f;
+// SD chip select pin.  Be sure to disable any other SPI devices such as Enet.
+#define SD_CS_PIN SS
+SdFat SD;
+File file;
+/*****************/
 
 extern bool drv_enabled;
 extern bool write_request;
@@ -79,7 +87,7 @@ void setup() {
 
   serial_log(PSTR("\r\n\r\nVTech DD20 emulator, v0.0.3, 11/1/2020\r\n"));
 
-  if (!SD.begin())
+  if (!SD.begin(SD_CS_PIN))
   {
     serial_log(PSTR("Failed to begin on SD"));
   }
@@ -102,15 +110,15 @@ void setup() {
   pinMode(stepPin2, INPUT_PULLUP);
   pinMode(stepPin3, INPUT_PULLUP);
 
-  f = SD.open(filename, FILE_READ);
-  if (f == false)
+  file = SD.open(filename, FILE_READ);
+  if (file == false)
   {
     serial_log(PSTR("DSK File is not opened"));
     return -1;
   }
 
-  set_track_padding(f);
-  build_sector_lut(f);
+  set_track_padding(file);
+  build_sector_lut(file);
 
   attachInterrupt(digitalPinToInterrupt(wrReqPin), writeRequest, CHANGE);
   attachInterrupt(digitalPinToInterrupt(enDrvPin), driveEnabled, CHANGE);

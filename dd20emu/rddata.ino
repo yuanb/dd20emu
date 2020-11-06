@@ -64,7 +64,7 @@ void handle_wr() {
 extern uint8_t fdc_sector[SECSIZE_VZ];
 inline void put_sector(uint8_t n, uint8_t s)
 {
-  if (get_sector(f, n, s) != -1)
+  if (get_sector(file, n, s) != -1)
   {     
     for(int j=0; j < SECSIZE_VZ; j++)
     {
