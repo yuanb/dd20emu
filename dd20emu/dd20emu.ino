@@ -2,15 +2,13 @@
 /*
    DD-20 emulator
    Author: Bill Yow
+   https://github.com/yuanb/dd20emu
 
 */
 
 #include <SPI.h>
 #include "SdFat.h"
-/*
- * /Users/billyuan/Library/Arduino15/packages/arduino/tools/avr-gcc/7.3.0-atmel3.6.1-arduino7/bin/avr-objdump -S dd20emu.ino.elf > /Users/billyuan/Documents/Arduino/dd20emu/dd20emu.lst
- * 
- */
+#include "vzdisk.h"
 
 /*
    Pin definitions, Arduino Mega2560
@@ -32,11 +30,6 @@
         13h     Write protection status(read-only)
 */
 
-#define TRK_NUM     40
-#define SEC_NUM     16
-#define SECSIZE_VZ  154
-#define TRKSIZE_VZ  SECSIZE_VZ * SEC_NUM    //2464
-#define TRKSIZE_VZ_PADDED TRKSIZE_VZ + 16
 
 //Emulator variables
 const int ledPin =  LED_BUILTIN;// the number of the LED pin Arduino
@@ -53,16 +46,19 @@ const byte stepPin1 = 20;
 const byte stepPin2 = 19;
 const byte stepPin3 = 18;
 
+extern bool drv_enabled;
+extern bool write_request;
+
 /*****************/
 /*  SD FILE      */
 /*****************/
 
 //Disk image format 1, FLOPPY1.DSK and FLOPPY2.DSK
 //Penguin wont load, D1B and VZCAVE wont run. The rest are ok
-//char filename[] = "FLOPPY1.DSK";
+char filename[] = "FLOPPY1.DSK";
 
 //Disk image format 2 (formatted from vzemu), fsize = 99185
-char filename[] = "HELLO.DSK";
+//char filename[] = "HELLO.DSK";
 
 //Disk image format 2(created from empty file from vzemu)
 //char filename[] = "20201016.DSK";
@@ -70,32 +66,15 @@ char filename[] = "HELLO.DSK";
 //Disk image format 2?
 //char filename[] ="extbasic.dsk";
 
-// SD chip select pin.  Be sure to disable any other SPI devices such as Enet.
-#define SD_CS_PIN SS
-SdFat SD;
-File file;
-/*****************/
-
-extern bool drv_enabled;
-extern bool write_request;
-
+vzdisk *vzdsk = NULL;
+  
 void setup() {
   Serial.begin(9600);
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
 
-  serial_log(PSTR("\r\n\r\nVTech DD20 emulator, v0.0.3, 11/1/2020\r\n"));
-
-  if (!SD.begin(SD_CS_PIN))
-  {
-    serial_log(PSTR("Failed to begin on SD"));
-  }
-
-  if (!SD.exists(filename))
-  {
-    serial_log(PSTR("Can't find FLOPPY1.DSK"));
-  }
+  serial_log(PSTR("\r\n\r\nVTech DD20 emulator, v0.0.4, 11/6/2020\r\n"));
 
   // put your setup code here, to run once:
   // set the digital pin as output:
@@ -110,15 +89,10 @@ void setup() {
   pinMode(stepPin2, INPUT_PULLUP);
   pinMode(stepPin3, INPUT_PULLUP);
 
-  file = SD.open(filename, FILE_READ);
-  if (file == false)
-  {
-    serial_log(PSTR("DSK File is not opened"));
-    return -1;
-  }
-
-  set_track_padding(file);
-  build_sector_lut(file);
+  vzdsk = new vzdisk();
+  vzdsk->Open(filename);
+  vzdsk->set_track_padding();  
+  vzdsk->build_sector_lut();
 
   attachInterrupt(digitalPinToInterrupt(wrReqPin), writeRequest, CHANGE);
   attachInterrupt(digitalPinToInterrupt(enDrvPin), driveEnabled, CHANGE);
@@ -127,7 +101,7 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(stepPin2), handle_steps, CHANGE);
   attachInterrupt(digitalPinToInterrupt(stepPin3), handle_steps, CHANGE);
 
-  serial_log(PSTR("Begin DD-20 emulation"));
+  serial_log(PSTR("Begin DD-20 emulation, Free memory: %d bytes"), freeMemory());
 }
 
 void loop() {

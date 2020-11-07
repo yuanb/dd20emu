@@ -62,9 +62,10 @@ void handle_wr() {
 }
 
 extern uint8_t fdc_sector[SECSIZE_VZ];
+extern vzdisk* vzdsk;
 inline void put_sector(uint8_t n, uint8_t s)
 {
-  if (get_sector(file, n, s) != -1)
+  if (vzdsk->get_sector(n, s) != -1)
   {     
     for(int j=0; j < SECSIZE_VZ; j++)
     {

@@ -7,6 +7,7 @@
  * Type 3. file size is 99200 bytes
  */
 
+
  #define  NORMALIZEZD_SECTOR_HDR   1
  
 
@@ -41,14 +42,57 @@ uint8_t fdc_sector[SECSIZE_VZ];
 
 //#define TRKSIZE_FM  3172
 //uint8_t   fm_track_data[TRKSIZE_FM];
-uint8_t padding = 0;
 
-int sector_interleave[SEC_NUM] = { 0, 11, 6, 1, 12, 7, 2, 13, 8, 3, 14, 9, 4, 15, 10, 5 };
-int inversed_sec_interleave[SEC_NUM] = {0, 3, 6, 9, 12, 15, 2, 5, 8, 11, 14, 1, 4, 7, 10, 13};
 
-void set_track_padding(File f)
+const int sector_interleave[SEC_NUM] = { 0, 11, 6, 1, 12, 7, 2, 13, 8, 3, 14, 9, 4, 15, 10, 5 };
+const int inversed_sec_interleave[SEC_NUM] = {0, 3, 6, 9, 12, 15, 2, 5, 8, 11, 14, 1, 4, 7, 10, 13};
+
+// SD chip select pin.  Be sure to disable any other SPI devices such as Enet.
+#define SD_CS_PIN SS
+
+unsigned long sector_lut[40][16] = { 0 };
+
+#include "vzdisk.h"
+
+vzdisk::vzdisk()
 {
-  unsigned long fsize = f.size();
+  if (!SD.begin(SD_CS_PIN))
+  {
+    serial_log(PSTR("Failed to begin on SD"));
+  }
+  else {
+    sdInitialized = true;
+  }  
+}
+
+int vzdisk::Open(char *filename)
+{
+  int result = -1;
+  if (sdInitialized)
+  {
+    if (SD.exists(filename))
+    {
+      file = SD.open(filename, FILE_READ);
+      if (file == false)
+      {
+        serial_log(PSTR("DSK File is not opened"));
+      }
+      else {
+        result = 0;
+      }
+    }
+    else
+    {
+      serial_log(PSTR("Can't find FLOPPY1.DSK"));
+    }
+  }
+
+  return result;
+}
+
+void vzdisk::set_track_padding()
+{
+  unsigned long fsize = file.size();
   
   if (fsize == 98560) {
     serial_log(PSTR("%s is type 1 image, no padding.\r\n"), filename);
@@ -56,13 +100,13 @@ void set_track_padding(File f)
   }
   else //if (fsize == 99184 || fsize == 99200)
   {
-    if (f.seek(TRKSIZE_VZ) == false) {
+    if (file.seek(TRKSIZE_VZ) == false) {
       serial_log(PSTR("Error when trying to identify dsk image format"));
       return;
     }
     
     uint8_t track_padding[16];
-    f.read(track_padding, 16);
+    file.read(track_padding, 16);
     bool padding_found = true;
     for(int i=0; i<16; i++) {
       if (track_padding[i]!=0) {
@@ -77,9 +121,7 @@ void set_track_padding(File f)
   }  
 }
 
-unsigned long sector_lut[40][16] = { 0 };
-
-void build_sector_lut(File f)
+void vzdisk::build_sector_lut()
 {
   uint8_t buf[13] = {0};
   uint8_t n[1] = {0};
@@ -90,9 +132,9 @@ void build_sector_lut(File f)
   serial_log(PSTR("Start building sector LUT.\r\n"));
   elapsed = millis();
 
-  while(offset <(f.size()-13)) {
-    f.seek(offset);
-    f.read(buf,13);
+  while(offset <(file.size()-13)) {
+    file.seek(offset);
+    file.read(buf,13);
 
     if (buf[0] == 0x80 && buf[1] == 0x80 && buf[2] == 0x80 && buf[3] == 0x80 && buf[4] == 0x80 && buf[5] == 0x80 &&
         buf[6] == 0x00 && buf[7] == 0xFE && buf[8] == 0xE7 && buf[9] == 0x18 && buf[10]== 0xC3)
@@ -128,14 +170,14 @@ void build_sector_lut(File f)
   serial_log(PSTR("Sectors found: %d\r\n"), sectors);
 }
 
-int get_sector(File f, uint8_t n, uint8_t s)
+int vzdisk::get_sector(uint8_t n, uint8_t s)
 {
   int result = -1;
   if (n<TRK_NUM && s<SEC_NUM)
   {
-    if (f.seek(sector_lut[n][s]) != false)
+    if (file.seek(sector_lut[n][s]) != false)
     { 
-      result= f.read(fdc_sector, SECSIZE_VZ);
+      result= file.read(fdc_sector, SECSIZE_VZ);
 
 #ifdef   NORMALIZEZD_SECTOR_HDR      
       if (result != -1)
@@ -172,7 +214,7 @@ int get_sector(File f, uint8_t n, uint8_t s)
 }
 
 /*
-int get_track(File f, int n)
+int vzdisk::get_track(File f, int n)
 {
   int size = TRKSIZE_VZ;
   unsigned long offset = (unsigned long)TRKSIZE_VZ * n;

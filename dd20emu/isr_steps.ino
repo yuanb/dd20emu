@@ -1,3 +1,4 @@
+#include "vzdisk.h"
 
 uint8_t vtech1_fdc_latch = 0;
 
