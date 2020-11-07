@@ -1,3 +1,5 @@
+#include "utilities.h"
+
 /**
  * LED visual when Drive is enabled
  */
@@ -39,4 +41,15 @@ void serial_log( const char * format, ... )
 //  vsprintf (buffer, format, args);
   Serial.print(buffer);
   va_end (args);
+}
+
+int freeMemory() {
+  char top;
+#ifdef __arm__
+  return &top - reinterpret_cast<char*>(sbrk(0));
+#elif defined(CORE_TEENSY) || (ARDUINO > 103 && ARDUINO != 151)
+  return &top - __brkval;
+#else  // __arm__
+  return __brkval ? &top - __brkval : &top - __malloc_heap_start;
+#endif  // __arm__
 }
