@@ -35,23 +35,6 @@ inline void put_byte(byte v)
   FM_OUTPUT_BIT(v,bitmask[7]);
 }
 
-/*
-int sector_interleave[SEC_NUM] = { 0, 11, 6, 1, 12, 7, 2, 13, 8, 3, 14, 9, 4, 15, 10, 5 };
-void put_track()
-{
-  //for(int n=0; n<TRKSIZE_VZ; n++)
-  
-  for(int i=0; i<SEC_NUM; i++)
-  {
-    sector_t *sec = (sector_t *)&fdc_data[sector_interleave[i] * sizeof(sector_t)];
-    for (int j = 0; j < SECSIZE_VZ; j++)
-    {
-      byte v = ((byte *)sec)[j];
-      put_byte(v); 
-    }
-  }
-}
-*/
 uint8_t current_sector = 0;
 void handle_wr() {
   if (drv_enabled && !write_request) {

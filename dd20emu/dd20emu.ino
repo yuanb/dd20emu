@@ -24,6 +24,7 @@
 */
 
 /*
+ * Laser 310 I/O port
    Port 10h     Latch(write-only)
         11h     DATA(read-only)
         12h     Pooling(read-only)
