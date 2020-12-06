@@ -15,7 +15,7 @@ uint8_t fdc_sector[SECSIZE_VZ];
 const int sector_interleave[SEC_NUM] = { 0, 11, 6, 1, 12, 7, 2, 13, 8, 3, 14, 9, 4, 15, 10, 5 };
 const int inversed_sec_interleave[SEC_NUM] = {0, 3, 6, 9, 12, 15, 2, 5, 8, 11, 14, 1, 4, 7, 10, 13};
 
-unsigned long sector_lut[40][16] = { 0 };
+int sec_lut[40][16] = { 0 };
 
 #include "vzdisk.h"
 
@@ -104,11 +104,17 @@ void vzdisk::build_sector_lut()
     if (buf[0] == 0x80 && buf[1] == 0x80 && buf[2] == 0x80 && buf[3] == 0x80 && buf[4] == 0x80 && buf[5] == 0x80 &&
         buf[6] == 0x00 && buf[7] == 0xFE && buf[8] == 0xE7 && buf[9] == 0x18 && buf[10]== 0xC3)
     {
-      //Exceptional sector size: 155, trim the first byte
-      sector_lut[buf[11]][inversed_sec_interleave[buf[12]]] = offset+1;
+      uint8_t TR = buf[11];
+      uint8_t SEC= inversed_sec_interleave[buf[12]];
+      
+      unsigned long expected_offset = (unsigned long)TR*(16*sizeof(sector_t)+padding) + (unsigned long)SEC*sizeof(sector_t);
+      int delta = offset + 1 - expected_offset;
+      sec_lut[TR][SEC] = delta;
 
+      //spec sector size: 154, trim the first byte      
       offset += (13+ 141);
       sectors++;
+      
       //if this is the last sector of  
       if (buf[12] == 0x05 && padding!=0) {
         offset += 15; //+15 or 16
@@ -117,10 +123,17 @@ void vzdisk::build_sector_lut()
     else if (buf[0] == 0x80 && buf[1] == 0x80 && buf[2] == 0x80 && buf[3] == 0x80 && buf[4] == 0x80 && buf[5] == 0x00 &&
         buf[6] == 0xFE && buf[7] == 0xE7 && buf[8] == 0x18 && buf[9] == 0xC3)
     {
-      sector_lut[buf[10]][inversed_sec_interleave[buf[11]]] = offset;
+      uint8_t TR = buf[10];
+      uint8_t SEC = inversed_sec_interleave[buf[11]];
       
+      unsigned long expected_offset = (unsigned long)TR*(16*sizeof(sector_t)+padding) + (unsigned long)SEC*sizeof(sector_t);
+      int delta = offset - expected_offset;
+      sec_lut[TR][SEC] = delta;
+
+      //Exceptional sector size: 153      
       offset += (12 + 141);
-      sectors++;      
+      sectors++;
+       
       //if this is the last sector of  
       if (buf[11] == 0x05 && padding!=0) {
         offset += 15;
@@ -140,7 +153,10 @@ int vzdisk::get_sector(uint8_t n, uint8_t s)
   int result = -1;
   if (n<TRK_NUM && s<SEC_NUM)
   {
-    if (file.seek(sector_lut[n][s]) != false)
+    unsigned long expected_offset = (unsigned long)n*(16*sizeof(sector_t)+padding) + (unsigned long)s*sizeof(sector_t);
+    unsigned long calculated_offset = expected_offset + sec_lut[n][s];
+
+    if (file.seek(calculated_offset) != false)
     { 
       result= file.read(fdc_sector, SECSIZE_VZ);
 
@@ -148,7 +164,8 @@ int vzdisk::get_sector(uint8_t n, uint8_t s)
       if (result != -1)
       {
         sec_hdr_t *sec_hdr = (sec_hdr_t *)fdc_sector;
-        //FE, E7, 18. C3
+        
+        //FE, E7, 18, C3
         if (sec_hdr->IDAM_leading[0] == 0xFE && sec_hdr->IDAM_leading[1] == 0xE7 && sec_hdr->IDAM_leading[2] == 0x18 && sec_hdr->IDAM_leading[3] == 0xC3) {
           if (n == sec_hdr->TR && sector_interleave[s] == sec_hdr->SC) {
             return result;
