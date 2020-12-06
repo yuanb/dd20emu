@@ -8,12 +8,15 @@
 #define TRKSIZE_VZ  SECSIZE_VZ * SEC_NUM    //2464
 #define TRKSIZE_VZ_PADDED TRKSIZE_VZ + 16
 
-#define  NORMALIZEZD_SECTOR_HDR   1
+#define  NORMALIZED_SECTOR_HDR   1
  
 typedef struct SectorHeader {
-#ifdef   NORMALIZEZD_SECTOR_HDR
+  /*Normalized means, if the GAP1 is 7 bytes, the first byte is skipped, only 6 bytes in output*/  
+#ifdef   NORMALIZED_SECTOR_HDR 
+  //some disk images have 6 bytes GAP1
   uint8_t   GAP1[6];    //0x80 5 times, then 0x00
 #else
+  /*spec GAP1*/
   uint8_t   GAP1[7];    //0x80 6 times, then 0x00
 #endif
   uint8_t   IDAM_leading[4];  //FE, E7, 18. C3
