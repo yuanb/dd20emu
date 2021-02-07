@@ -15,7 +15,7 @@ uint8_t fdc_sector[SECSIZE_VZ];
 const int sector_interleave[SEC_NUM] = { 0, 11, 6, 1, 12, 7, 2, 13, 8, 3, 14, 9, 4, 15, 10, 5 };
 const int inversed_sec_interleave[SEC_NUM] = {0, 3, 6, 9, 12, 15, 2, 5, 8, 11, 14, 1, 4, 7, 10, 13};
 
-int sec_lut[40][16] = { 0 };
+int8_t sec_lut[40][16] = { 0 };
 
 #include "vzdisk.h"
 
@@ -109,7 +109,7 @@ void vzdisk::build_sector_lut()
       
       unsigned long expected_offset = (unsigned long)TR*(16*sizeof(sector_t)+padding) + (unsigned long)SEC*sizeof(sector_t);
       int delta = offset + 1 - expected_offset;
-      sec_lut[TR][SEC] = delta;
+      sec_lut[TR][SEC] = delta - TR*16 /*SEC_NUM*/;
 
       //spec sector size: 154, trim the first byte      
       offset += (13+ 141);
@@ -128,7 +128,7 @@ void vzdisk::build_sector_lut()
       
       unsigned long expected_offset = (unsigned long)TR*(16*sizeof(sector_t)+padding) + (unsigned long)SEC*sizeof(sector_t);
       int delta = offset - expected_offset;
-      sec_lut[TR][SEC] = delta;
+      sec_lut[TR][SEC] = delta - TR*16 /*SEC_NUM*/;
 
       //Exceptional sector size: 153      
       offset += (12 + 141);
@@ -144,17 +144,35 @@ void vzdisk::build_sector_lut()
     }
   }
 
+#if 0 //Dump Sector LUT
+  //2021-02-07 BUG: The sector_lut is always 1 to 16 on every track for some reason, these must be a calculation error,
+  //I suspect Laser310 DI-40 fall out of sync every once a while... there are some retries.
+  for(int i=0; i<TRK_NUM; i++)
+  {
+    serial_log(PSTR("TR: %d\r\n"),i);
+    for(int j=0; j<SEC_NUM; j++)
+    {
+      serial_log(PSTR("%d "), sec_lut[i][j]);
+    }
+    serial_log(PSTR("\r\n"));
+  }
+#endif
+
   serial_log(PSTR("Finished, used %d ms.\r\n"), millis()-elapsed);
   serial_log(PSTR("Sectors found: %d\r\n"), sectors);
 }
 
+/**
+ * n : Requested Track number
+ * s : Requested Sector number
+ */
 int vzdisk::get_sector(uint8_t n, uint8_t s)
 {
   int result = -1;
   if (n<TRK_NUM && s<SEC_NUM)
   {
-    unsigned long expected_offset = (unsigned long)n*(16*sizeof(sector_t)+padding) + (unsigned long)s*sizeof(sector_t);
-    unsigned long calculated_offset = expected_offset + sec_lut[n][s];
+    unsigned long expected_offset = (unsigned long)n*(SEC_NUM*sizeof(sector_t)+padding) + (unsigned long)s*sizeof(sector_t);
+    unsigned long calculated_offset = expected_offset + (sec_lut[n][s] + n*16 /*SEC_NUM*/);
 
     if (file.seek(calculated_offset) != false)
     { 
