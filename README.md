@@ -17,6 +17,11 @@ Todo list:
 * I have about 2.25 hours length of Laser 310 data tape. They are Demo, Utilities, Games, Basic program I wrote etc. I would like to convert them to vz files. Giving they are 30 years old, the recorder I used back then was not a standard data recorder, there is only a little hope. [This link](http://www.pagetable.com/?p=32) describes how data tape encoding works on Apple I.
 
 ## Updates
+2021-02/15  
+Active feature branches
+Feature/mega2560_using_int8_sector_lut
+Feature/arduino_uno_port
+
 2020-11/01
 
 Sector lut finished. Tested with hello.dsk disk image. 
