@@ -47,21 +47,19 @@
 */
 #define PORT_RDDATA   PORTG   //rddata.ino
 #define RD_DATA_BIT 5
+const byte rdDataPin = 4;
 
 #define PORT_CTL      PINE    //isr.ino
 #define PIN_EN_BIT      5
 #define PIN_WRREQ_BIT   4
+const byte enDrvPin  = 3;
+const byte wrReqPin  = 2;
 
 #define PORT_STEP     PIND    //isr_steps.ino
 #define PIN_STEP3_BIT   3
 #define PIN_STEP2_BIT   2
 #define PIN_STEP1_BIT   1
 #define PIN_STEP0_BIT   0
-
-//pinMode(), use pin name
-const byte rdDataPin = 4;
-const byte enDrvPin  = 3;
-const byte wrReqPin  = 2;
 const byte stepPin3  = 18;
 const byte stepPin2  = 19;
 const byte stepPin1  = 20;
@@ -90,10 +88,10 @@ extern bool write_request;
 
 //Disk image format 1, FLOPPY1.DSK and FLOPPY2.DSK
 //Penguin wont load, D1B and VZCAVE wont run. The rest are ok
-//char filename[] = "FLOPPY1.DSK";
+char filename[] = "FLOPPY1.DSK";
 
 //Disk image format 2 (formatted from vzemu), fsize = 99185
-char filename[] = "HELLO.DSK";
+//char filename[] = "HELLO.DSK";
 
 //Disk image format 2(created from empty file from vzemu)
 //char filename[] = "20201016.DSK";
