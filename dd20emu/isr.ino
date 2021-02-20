@@ -10,6 +10,7 @@ bool write_request = false;
 //https://arduino.stackexchange.com/questions/8758/arduino-interruption-on-pin-change
 void driveEnabled() {
   drv_enabled = !(PIN_EN_REG & PIN_EN_MASK);
+  handle_drive_enable();
 }
 
 void writeRequest() {

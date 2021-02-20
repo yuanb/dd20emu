@@ -6,10 +6,21 @@
 
 */
 
+/* Libraries used:
+ *  SDFat : Author : Bill Greiman, Tested: 2.0.4, https://github.com/greiman/SdFat
+ *  PinChangeInterrupt : Tested 1.2.8, https://github.com/NicoHood/PinChangeInterrupt
+ */
+
 #include <SPI.h>
 #include "SdFat.h"
+#include "PinChangeInterrupt.h"
 #include "vzdisk.h"
 
+
+//#define DD20_UNO
+#define DD20_MEGA2560
+
+#ifdef DD20_UNO
 /*
  * Pin definitions, Arduino Uno
  * GND
@@ -33,6 +44,30 @@
  * https://www.arduino.cc/en/uploads/Main/arduino-ethernet-shield-05-schematic.pdf
  * 
 */
+/* Port and bit for RDDATA */
+#define PORT_RDDATA   PORTD   //rddata.ino
+#define RD_DATA_BIT 4
+const byte rdDataPin = 4;
+
+/* Port and bits for /EnDrv and /WRReq */
+#define PORT_CTL      PIND    //isr.ino
+#define PIN_EN_BIT      3
+#define PIN_WRREQ_BIT   2
+const byte enDrvPin  = 3;
+const byte wrReqPin  = 2;
+
+/* Port and bits for Step 0 ~ Step 3 */
+#define PORT_STEP     PINC    //isr_steps.ino
+#define PIN_STEP3_BIT   3
+#define PIN_STEP2_BIT   2
+#define PIN_STEP1_BIT   1
+#define PIN_STEP0_BIT   0
+const byte stepPin3  = A3;
+const byte stepPin2  = A2;
+const byte stepPin1  = A1;
+const byte stepPin0  = A0;
+
+#else //DD20_MEGA2560
 
 /*
    Pin definitions, Arduino Mega2560
@@ -45,27 +80,30 @@
    20,  PD1,    Step1
    21,  PD0,    Step0  
 */
+
+/* Port and bit for RDDATA */
 #define PORT_RDDATA   PORTG   //rddata.ino
 #define RD_DATA_BIT 5
+const byte rdDataPin = 4;
 
+/* Port and bits for /EnDrv and /WRReq */
 #define PORT_CTL      PINE    //isr.ino
 #define PIN_EN_BIT      5
 #define PIN_WRREQ_BIT   4
+const byte enDrvPin  = 3;
+const byte wrReqPin  = 2;
 
-#define PORT_STEP     PIND    //isr_steps.ino
+/* Port and bits for Step 0 ~ Step 3 */
+#define PORT_STEP     PINK    //isr_steps.ino
 #define PIN_STEP3_BIT   3
 #define PIN_STEP2_BIT   2
 #define PIN_STEP1_BIT   1
 #define PIN_STEP0_BIT   0
-
-//pinMode(), use pin name
-const byte rdDataPin = 4;
-const byte enDrvPin  = 3;
-const byte wrReqPin  = 2;
-const byte stepPin3  = 18;
-const byte stepPin2  = 19;
-const byte stepPin1  = 20;
-const byte stepPin0  = 21;
+const byte stepPin3  = A11;
+const byte stepPin2  = A10;
+const byte stepPin1  = A9;
+const byte stepPin0  = A8;
+#endif
 
 /*
  * Laser 310 I/O port
@@ -76,11 +114,7 @@ const byte stepPin0  = 21;
 */
 
 
-//Emulator variables
-const int ledPin =  LED_BUILTIN;// the number of the LED pin Arduino
-//const int ledPin = 2;         //Ethernet shield
-uint8_t ledState = LOW;         // ledState used to set the LED
-
+//Emulator variables, active high: TRUE
 extern bool drv_enabled;
 extern bool write_request;
 
@@ -113,7 +147,7 @@ void setup() {
 
   // put your setup code here, to run once:
   // set the digital pin as output:
-  pinMode(ledPin, OUTPUT);
+  pinMode(LED_BUILTIN, OUTPUT);
 
   pinMode(enDrvPin, INPUT_PULLUP);
   pinMode(rdDataPin, OUTPUT);
@@ -131,12 +165,12 @@ void setup() {
 
   attachInterrupt(digitalPinToInterrupt(wrReqPin), writeRequest, CHANGE);
   attachInterrupt(digitalPinToInterrupt(enDrvPin), driveEnabled, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(stepPin0), handle_steps, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(stepPin1), handle_steps, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(stepPin2), handle_steps, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(stepPin3), handle_steps, CHANGE);
+  attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(stepPin0), handle_steps, CHANGE);
+  attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(stepPin1), handle_steps, CHANGE);
+  attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(stepPin2), handle_steps, CHANGE);
+  attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(stepPin3), handle_steps, CHANGE); 
 
-  serial_log(PSTR("Begin DD-20 emulation, Free memory: %d bytes"), freeMemory());
+  serial_log(PSTR("Begin DD-20 emulation, Free memory: %d bytes\r\n"), freeMemory());
 }
 
 void loop() {

@@ -15,7 +15,7 @@ uint8_t fdc_sector[SECSIZE_VZ];
 const int sector_interleave[SEC_NUM] = { 0, 11, 6, 1, 12, 7, 2, 13, 8, 3, 14, 9, 4, 15, 10, 5 };
 const int inversed_sec_interleave[SEC_NUM] = {0, 3, 6, 9, 12, 15, 2, 5, 8, 11, 14, 1, 4, 7, 10, 13};
 
-int sec_lut[40][16] = { 0 };
+int8_t sec_lut[40][16] = { 0 };
 
 #include "vzdisk.h"
 
@@ -103,6 +103,17 @@ void vzdisk::build_sector_lut()
     file.read(buf,13);
 
     /* 0x80 6 times, then 0x00 */
+    /**
+     * We should use : 
+     *    int delta = offset + 0 - expected_offset;
+     *      then
+     *    offset += (13 + 141);
+     * in case of 6 bytes 0x80, otherwise the lut table will also be '1' for every sector
+     * I belive there is a bug : I have to put
+     *    int delta = offset + 1 - expected_offset;
+     *      and
+     *    offset += (12 + 141);
+     */
     if (buf[0] == 0x80 && buf[1] == 0x80 && buf[2] == 0x80 && buf[3] == 0x80 && buf[4] == 0x80 && buf[5] == 0x80 &&
         buf[6] == 0x00 && buf[7] == 0xFE && buf[8] == 0xE7 && buf[9] == 0x18 && buf[10]== 0xC3)
     {
@@ -110,22 +121,19 @@ void vzdisk::build_sector_lut()
       uint8_t SEC= inversed_sec_interleave[buf[12]];
       
       unsigned long expected_offset = (unsigned long)TR*(16*sizeof(sector_t)+padding) + (unsigned long)SEC*sizeof(sector_t);
-#if 1
       int delta = offset + 1 - expected_offset;
+#if 0
       sec_lut[TR][SEC] = delta;
 #else
-      int delta = offset + /*1*/0 - expected_offset;
-      sec_lut[TR][SEC] = delta - TR*16 - SEC /*SEC_NUM*/;
+      sec_lut[TR][SEC] = delta - TR*16 - SEC;
 
       if (oldTR!=TR) {
-        serial_log(PSTR("\r\n"));
         oldTR = TR;
-      }
-      serial_log(PSTR("#"));      
+      }  
 #endif
 
-      //spec sector size: 154, trim the first byte      
-      offset += (/*13*/12+ 141);
+      //spec sector size: 154, trim the first byte
+      offset += (12 + 141);
       sectors++;
       
       //if this is the last sector of  
@@ -142,15 +150,14 @@ void vzdisk::build_sector_lut()
       
       unsigned long expected_offset = (unsigned long)TR*(16*sizeof(sector_t)+padding) + (unsigned long)SEC*sizeof(sector_t);
       int delta = offset - expected_offset;
-#if 1
+#if 0
       sec_lut[TR][SEC] = delta;
 #else      
-      sec_lut[TR][SEC] = delta - TR*16 -SEC /*SEC_NUM*/;
+      sec_lut[TR][SEC] = delta - TR*16 - SEC;
+
       if (oldTR!=TR) {
-        serial_log(PSTR("\r\n"));
         oldTR = TR;
-      }      
-      serial_log(PSTR("."));      
+      }   
 #endif
 
       //Exceptional sector size: 153      
@@ -173,7 +180,7 @@ void vzdisk::build_sector_lut()
   serial_log(PSTR("\r\n"));
   for(int i=0; i<TRK_NUM; i++)
   {
-    serial_log(PSTR("TR: %d\r\n"),i);
+    serial_log(PSTR("TR: %02d - "),i);
     for(int j=0; j<SEC_NUM; j++)
     {
       serial_log(PSTR("%d "), sec_lut[i][j]);
@@ -195,12 +202,12 @@ int vzdisk::get_sector(uint8_t n, uint8_t s)
   int result = -1;
   if (n<TRK_NUM && s<SEC_NUM)
   {
-#if 1
+#if 0
     unsigned long expected_offset = (unsigned long)n*(16*sizeof(sector_t)+padding) + (unsigned long)s*sizeof(sector_t);
     unsigned long calculated_offset = expected_offset + sec_lut[n][s];  
 #else    
     unsigned long expected_offset = (unsigned long)n*(SEC_NUM*sizeof(sector_t)+padding) + (unsigned long)s*sizeof(sector_t);
-    unsigned long calculated_offset = expected_offset + (sec_lut[n][s] + n*16 /*SEC_NUM*/);
+    unsigned long calculated_offset = expected_offset + (sec_lut[n][s] + n*16 + s);
 #endif
 
     if (file.seek(calculated_offset) != false)
@@ -210,7 +217,11 @@ int vzdisk::get_sector(uint8_t n, uint8_t s)
 #ifdef   NORMALIZEZD_SECTOR_HDR      
       if (result != -1)
       {
+#if 1      
         sec_hdr_t *sec_hdr = (sec_hdr_t *)fdc_sector;
+#else
+        sec_hdr_t *sec_hdr = (sec_hdr_t *)fdc_sector + sec_lut[n][s];
+#endif
         
         //FE, E7, 18, C3
         if (sec_hdr->IDAM_leading[0] == 0xFE && sec_hdr->IDAM_leading[1] == 0xE7 && sec_hdr->IDAM_leading[2] == 0x18 && sec_hdr->IDAM_leading[3] == 0xC3) {

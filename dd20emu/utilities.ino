@@ -2,6 +2,7 @@
 
 /**
  * LED visual when Drive is enabled
+ * Low is enabled, power led when main unit is turned off
  */
 bool old_drv_enabled = -1; 
 inline void handle_drive_enable() {
@@ -9,7 +10,6 @@ inline void handle_drive_enable() {
   if (isEnabled != old_drv_enabled) {
     digitalWrite(LED_BUILTIN, isEnabled);
     old_drv_enabled = isEnabled;
-    //serial_log(PSTR("Enabled=%d"), drv_enabled);
   }
 }
 
