@@ -103,6 +103,17 @@ void vzdisk::build_sector_lut()
     file.read(buf,13);
 
     /* 0x80 6 times, then 0x00 */
+    /**
+     * We should use : 
+     *    int delta = offset + 0 - expected_offset;
+     *      then
+     *    offset += (13 + 141);
+     * in case of 6 bytes 0x80, otherwise the lut table will also be '1' for every sector
+     * I belive there is a bug : I have to put
+     *    int delta = offset + 1 - expected_offset;
+     *      and
+     *    offset += (12 + 141);
+     */
     if (buf[0] == 0x80 && buf[1] == 0x80 && buf[2] == 0x80 && buf[3] == 0x80 && buf[4] == 0x80 && buf[5] == 0x80 &&
         buf[6] == 0x00 && buf[7] == 0xFE && buf[8] == 0xE7 && buf[9] == 0x18 && buf[10]== 0xC3)
     {
@@ -163,7 +174,7 @@ void vzdisk::build_sector_lut()
     }
   }
 
-#if 1 //Dump Sector LUT
+#if 0 //Dump Sector LUT
   //2021-02-07 BUG: The sector_lut is always 1 to 16 on every track for some reason, these must be a calculation error,
   //I suspect Laser310 DI-40 fall out of sync every once a while... there are some retries.
   serial_log(PSTR("\r\n"));

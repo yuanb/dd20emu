@@ -6,14 +6,21 @@
 
 */
 
+/* Libraries used:
+ *  SDFat : Author : Bill Greiman, Tested: 2.0.4, https://github.com/greiman/SdFat
+ *  PinChangeInterrupt : Tested 1.2.8, https://github.com/NicoHood/PinChangeInterrupt
+ */
+
 #include <SPI.h>
 #include "SdFat.h"
+#include "PinChangeInterrupt.h"
 #include "vzdisk.h"
 
-//#define UNO
-#define MEGA2560
 
-#ifdef UNO
+//#define DD20_UNO
+#define DD20_MEGA2560
+
+#ifdef DD20_UNO
 /*
  * Pin definitions, Arduino Uno
  * GND
@@ -37,7 +44,7 @@
  * https://www.arduino.cc/en/uploads/Main/arduino-ethernet-shield-05-schematic.pdf
  * 
 */
-#else //MEGA2560
+#else //DD20_MEGA2560
 /*
    Pin definitions, Arduino Mega2560
    GND
@@ -63,16 +70,15 @@ const byte enDrvPin  = 3;
 const byte wrReqPin  = 2;
 
 /* Port and bits for Step 0 ~ Step 3 */
-#define PORT_STEP     PIND    //isr_steps.ino
+#define PORT_STEP     PINK    //isr_steps.ino
 #define PIN_STEP3_BIT   3
 #define PIN_STEP2_BIT   2
 #define PIN_STEP1_BIT   1
 #define PIN_STEP0_BIT   0
-const byte stepPin3  = 18;
-const byte stepPin2  = 19;
-const byte stepPin1  = 20;
-const byte stepPin0  = 21;
-
+const byte stepPin3  = A8;
+const byte stepPin2  = A9;
+const byte stepPin1  = A10;
+const byte stepPin0  = A11;
 #endif
 
 /*
@@ -84,7 +90,7 @@ const byte stepPin0  = 21;
 */
 
 
-//Emulator variables
+//Emulator variables, active high: TRUE
 extern bool drv_enabled;
 extern bool write_request;
 
@@ -94,10 +100,10 @@ extern bool write_request;
 
 //Disk image format 1, FLOPPY1.DSK and FLOPPY2.DSK
 //Penguin wont load, D1B and VZCAVE wont run. The rest are ok
-char filename[] = "FLOPPY1.DSK";
+//char filename[] = "FLOPPY1.DSK";
 
 //Disk image format 2 (formatted from vzemu), fsize = 99185
-//char filename[] = "HELLO.DSK";
+char filename[] = "HELLO.DSK";
 
 //Disk image format 2(created from empty file from vzemu)
 //char filename[] = "20201016.DSK";
@@ -135,12 +141,12 @@ void setup() {
 
   attachInterrupt(digitalPinToInterrupt(wrReqPin), writeRequest, CHANGE);
   attachInterrupt(digitalPinToInterrupt(enDrvPin), driveEnabled, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(stepPin0), handle_steps, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(stepPin1), handle_steps, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(stepPin2), handle_steps, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(stepPin3), handle_steps, CHANGE);
+  attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(stepPin0), handle_steps, CHANGE);
+  attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(stepPin1), handle_steps, CHANGE);
+  attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(stepPin2), handle_steps, CHANGE);
+  attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(stepPin3), handle_steps, CHANGE); 
 
-  serial_log(PSTR("Begin DD-20 emulation, Free memory: %d bytes"), freeMemory());
+  serial_log(PSTR("Begin DD-20 emulation, Free memory: %d bytes\r\n"), freeMemory());
 }
 
 void loop() {
