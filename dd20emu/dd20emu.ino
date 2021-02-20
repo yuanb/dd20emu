@@ -44,7 +44,31 @@
  * https://www.arduino.cc/en/uploads/Main/arduino-ethernet-shield-05-schematic.pdf
  * 
 */
+/* Port and bit for RDDATA */
+#define PORT_RDDATA   PORTD   //rddata.ino
+#define RD_DATA_BIT 4
+const byte rdDataPin = 4;
+
+/* Port and bits for /EnDrv and /WRReq */
+#define PORT_CTL      PIND    //isr.ino
+#define PIN_EN_BIT      3
+#define PIN_WRREQ_BIT   2
+const byte enDrvPin  = 3;
+const byte wrReqPin  = 2;
+
+/* Port and bits for Step 0 ~ Step 3 */
+#define PORT_STEP     PINC    //isr_steps.ino
+#define PIN_STEP3_BIT   3
+#define PIN_STEP2_BIT   2
+#define PIN_STEP1_BIT   1
+#define PIN_STEP0_BIT   0
+const byte stepPin3  = A3;
+const byte stepPin2  = A2;
+const byte stepPin1  = A1;
+const byte stepPin0  = A0;
+
 #else //DD20_MEGA2560
+
 /*
    Pin definitions, Arduino Mega2560
    GND
@@ -75,10 +99,10 @@ const byte wrReqPin  = 2;
 #define PIN_STEP2_BIT   2
 #define PIN_STEP1_BIT   1
 #define PIN_STEP0_BIT   0
-const byte stepPin3  = A8;
-const byte stepPin2  = A9;
-const byte stepPin1  = A10;
-const byte stepPin0  = A11;
+const byte stepPin3  = A11;
+const byte stepPin2  = A10;
+const byte stepPin1  = A9;
+const byte stepPin0  = A8;
 #endif
 
 /*
