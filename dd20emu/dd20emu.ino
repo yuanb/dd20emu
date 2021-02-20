@@ -45,16 +45,20 @@
    20,  PD1,    Step1
    21,  PD0,    Step0  
 */
+
+/* Port and bit for RDDATA */
 #define PORT_RDDATA   PORTG   //rddata.ino
 #define RD_DATA_BIT 5
 const byte rdDataPin = 4;
 
+/* Port and bits for /EnDrv and /WRReq */
 #define PORT_CTL      PINE    //isr.ino
 #define PIN_EN_BIT      5
 #define PIN_WRREQ_BIT   4
 const byte enDrvPin  = 3;
 const byte wrReqPin  = 2;
 
+/* Port and bits for Step 0 ~ Step 3 */
 #define PORT_STEP     PIND    //isr_steps.ino
 #define PIN_STEP3_BIT   3
 #define PIN_STEP2_BIT   2
