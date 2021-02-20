@@ -10,6 +10,10 @@
 #include "SdFat.h"
 #include "vzdisk.h"
 
+//#define UNO
+#define MEGA2560
+
+#ifdef UNO
 /*
  * Pin definitions, Arduino Uno
  * GND
@@ -33,7 +37,7 @@
  * https://www.arduino.cc/en/uploads/Main/arduino-ethernet-shield-05-schematic.pdf
  * 
 */
-
+#else //MEGA2560
 /*
    Pin definitions, Arduino Mega2560
    GND
@@ -69,6 +73,8 @@ const byte stepPin2  = 19;
 const byte stepPin1  = 20;
 const byte stepPin0  = 21;
 
+#endif
+
 /*
  * Laser 310 I/O port
    Port 10h     Latch(write-only)
@@ -79,10 +85,6 @@ const byte stepPin0  = 21;
 
 
 //Emulator variables
-const int ledPin =  LED_BUILTIN;// the number of the LED pin Arduino
-//const int ledPin = 2;         //Ethernet shield
-uint8_t ledState = LOW;         // ledState used to set the LED
-
 extern bool drv_enabled;
 extern bool write_request;
 
@@ -115,7 +117,7 @@ void setup() {
 
   // put your setup code here, to run once:
   // set the digital pin as output:
-  pinMode(ledPin, OUTPUT);
+  pinMode(LED_BUILTIN, OUTPUT);
 
   pinMode(enDrvPin, INPUT_PULLUP);
   pinMode(rdDataPin, OUTPUT);
