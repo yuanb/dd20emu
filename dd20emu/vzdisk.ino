@@ -110,6 +110,10 @@ void vzdisk::build_sector_lut()
       uint8_t SEC= inversed_sec_interleave[buf[12]];
       
       unsigned long expected_offset = (unsigned long)TR*(16*sizeof(sector_t)+padding) + (unsigned long)SEC*sizeof(sector_t);
+#if 1
+      int delta = offset + 1 - expected_offset;
+      sec_lut[TR][SEC] = delta;
+#else
       int delta = offset + /*1*/0 - expected_offset;
       sec_lut[TR][SEC] = delta - TR*16 - SEC /*SEC_NUM*/;
 
@@ -117,7 +121,8 @@ void vzdisk::build_sector_lut()
         serial_log(PSTR("\r\n"));
         oldTR = TR;
       }
-      serial_log(PSTR("#"));
+      serial_log(PSTR("#"));      
+#endif
 
       //spec sector size: 154, trim the first byte      
       offset += (/*13*/12+ 141);
@@ -137,13 +142,16 @@ void vzdisk::build_sector_lut()
       
       unsigned long expected_offset = (unsigned long)TR*(16*sizeof(sector_t)+padding) + (unsigned long)SEC*sizeof(sector_t);
       int delta = offset - expected_offset;
+#if 1
+      sec_lut[TR][SEC] = delta;
+#else      
       sec_lut[TR][SEC] = delta - TR*16 -SEC /*SEC_NUM*/;
-
       if (oldTR!=TR) {
         serial_log(PSTR("\r\n"));
         oldTR = TR;
       }      
-      serial_log(PSTR("."));
+      serial_log(PSTR("."));      
+#endif
 
       //Exceptional sector size: 153      
       offset += (12 + 141);
@@ -159,7 +167,7 @@ void vzdisk::build_sector_lut()
     }
   }
 
-#if 1 //Dump Sector LUT
+#if 0 //Dump Sector LUT
   //2021-02-07 BUG: The sector_lut is always 1 to 16 on every track for some reason, these must be a calculation error,
   //I suspect Laser310 DI-40 fall out of sync every once a while... there are some retries.
   serial_log(PSTR("\r\n"));
@@ -187,8 +195,13 @@ int vzdisk::get_sector(uint8_t n, uint8_t s)
   int result = -1;
   if (n<TRK_NUM && s<SEC_NUM)
   {
+#if 1
+    unsigned long expected_offset = (unsigned long)n*(16*sizeof(sector_t)+padding) + (unsigned long)s*sizeof(sector_t);
+    unsigned long calculated_offset = expected_offset + sec_lut[n][s];  
+#else    
     unsigned long expected_offset = (unsigned long)n*(SEC_NUM*sizeof(sector_t)+padding) + (unsigned long)s*sizeof(sector_t);
     unsigned long calculated_offset = expected_offset + (sec_lut[n][s] + n*16 /*SEC_NUM*/);
+#endif
 
     if (file.seek(calculated_offset) != false)
     { 
