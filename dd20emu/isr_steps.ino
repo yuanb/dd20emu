@@ -6,11 +6,7 @@ uint8_t vtech1_fdc_latch = 0;
 uint8_t vtech1_track_x2 = PARKED_TRACK;
 
 //Mega 2560 only, stepmotor phase interrupt register
-#define PIN_STEP_REG    PIND  // interrupt 0 is on AVR pin PD2
-#define PIN_STEP3_BIT   3
-#define PIN_STEP2_BIT   2
-#define PIN_STEP1_BIT   1
-#define PIN_STEP0_BIT   0
+#define PIN_STEP_REG    PORT_STEP  // interrupt 0 is on AVR pin PD2
 
 #define PHI0(n) (((n)>>PIN_STEP0_BIT)&1)
 #define PHI1(n) (((n)>>PIN_STEP1_BIT)&1)

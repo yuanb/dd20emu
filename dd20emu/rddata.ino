@@ -9,10 +9,10 @@
 #define delay_20us  __builtin_avr_delay_cycles (300)
 #define delay_31_2us  __builtin_avr_delay_cycles (488)
 
+#define RD_MASK   (1<<RD_DATA_BIT)
+#define RD_HIGH   PORT_RDDATA |= RD_MASK;
+#define RD_LOW    PORT_RDDATA &= ~RD_MASK;
 
-//RD Data PB7
-#define RD_HIGH   PORTB |= 0x80;
-#define RD_LOW    PORTB &= ~0x80;
 
 #define FM_BIT_1  delay_11us; RD_HIGH;  delay_1us;  RD_LOW; delay_20us;
 #define FM_BIT_0  delay_31_2us;

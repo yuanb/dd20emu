@@ -93,6 +93,7 @@ void vzdisk::build_sector_lut()
   unsigned long offset = 0;
   uint16_t sectors = 0;
   uint16_t elapsed = 0;
+  int8_t oldTR = -1;
 
   serial_log(PSTR("Start building sector LUT.\r\n"));
   elapsed = millis();
@@ -101,6 +102,7 @@ void vzdisk::build_sector_lut()
     file.seek(offset);
     file.read(buf,13);
 
+    /* 0x80 6 times, then 0x00 */
     if (buf[0] == 0x80 && buf[1] == 0x80 && buf[2] == 0x80 && buf[3] == 0x80 && buf[4] == 0x80 && buf[5] == 0x80 &&
         buf[6] == 0x00 && buf[7] == 0xFE && buf[8] == 0xE7 && buf[9] == 0x18 && buf[10]== 0xC3)
     {
@@ -108,11 +110,22 @@ void vzdisk::build_sector_lut()
       uint8_t SEC= inversed_sec_interleave[buf[12]];
       
       unsigned long expected_offset = (unsigned long)TR*(16*sizeof(sector_t)+padding) + (unsigned long)SEC*sizeof(sector_t);
+#if 1
       int delta = offset + 1 - expected_offset;
       sec_lut[TR][SEC] = delta;
+#else
+      int delta = offset + /*1*/0 - expected_offset;
+      sec_lut[TR][SEC] = delta - TR*16 - SEC /*SEC_NUM*/;
+
+      if (oldTR!=TR) {
+        serial_log(PSTR("\r\n"));
+        oldTR = TR;
+      }
+      serial_log(PSTR("#"));      
+#endif
 
       //spec sector size: 154, trim the first byte      
-      offset += (13+ 141);
+      offset += (/*13*/12+ 141);
       sectors++;
       
       //if this is the last sector of  
@@ -120,6 +133,7 @@ void vzdisk::build_sector_lut()
         offset += 15; //+15 or 16
       }
     }
+    /* 0x80 5 times, then 0x00 */
     else if (buf[0] == 0x80 && buf[1] == 0x80 && buf[2] == 0x80 && buf[3] == 0x80 && buf[4] == 0x80 && buf[5] == 0x00 &&
         buf[6] == 0xFE && buf[7] == 0xE7 && buf[8] == 0x18 && buf[9] == 0xC3)
     {
@@ -128,7 +142,16 @@ void vzdisk::build_sector_lut()
       
       unsigned long expected_offset = (unsigned long)TR*(16*sizeof(sector_t)+padding) + (unsigned long)SEC*sizeof(sector_t);
       int delta = offset - expected_offset;
+#if 1
       sec_lut[TR][SEC] = delta;
+#else      
+      sec_lut[TR][SEC] = delta - TR*16 -SEC /*SEC_NUM*/;
+      if (oldTR!=TR) {
+        serial_log(PSTR("\r\n"));
+        oldTR = TR;
+      }      
+      serial_log(PSTR("."));      
+#endif
 
       //Exceptional sector size: 153      
       offset += (12 + 141);
@@ -144,17 +167,41 @@ void vzdisk::build_sector_lut()
     }
   }
 
+#if 0 //Dump Sector LUT
+  //2021-02-07 BUG: The sector_lut is always 1 to 16 on every track for some reason, these must be a calculation error,
+  //I suspect Laser310 DI-40 fall out of sync every once a while... there are some retries.
+  serial_log(PSTR("\r\n"));
+  for(int i=0; i<TRK_NUM; i++)
+  {
+    serial_log(PSTR("TR: %d\r\n"),i);
+    for(int j=0; j<SEC_NUM; j++)
+    {
+      serial_log(PSTR("%d "), sec_lut[i][j]);
+    }
+    serial_log(PSTR("\r\n"));
+  }
+#endif
+
   serial_log(PSTR("Finished, used %d ms.\r\n"), millis()-elapsed);
   serial_log(PSTR("Sectors found: %d\r\n"), sectors);
 }
 
+/**
+ * n : Requested Track number
+ * s : Requested Sector number
+ */
 int vzdisk::get_sector(uint8_t n, uint8_t s)
 {
   int result = -1;
   if (n<TRK_NUM && s<SEC_NUM)
   {
+#if 1
     unsigned long expected_offset = (unsigned long)n*(16*sizeof(sector_t)+padding) + (unsigned long)s*sizeof(sector_t);
-    unsigned long calculated_offset = expected_offset + sec_lut[n][s];
+    unsigned long calculated_offset = expected_offset + sec_lut[n][s];  
+#else    
+    unsigned long expected_offset = (unsigned long)n*(SEC_NUM*sizeof(sector_t)+padding) + (unsigned long)s*sizeof(sector_t);
+    unsigned long calculated_offset = expected_offset + (sec_lut[n][s] + n*16 /*SEC_NUM*/);
+#endif
 
     if (file.seek(calculated_offset) != false)
     { 
