@@ -18,7 +18,8 @@ Todo list:
 
 ## Updates
 2021-02/15  
-Active feature branches  
+Default branch: develop  
+Active feature branches:  
 Feature/mega2560_using_int8_sector_lut  
 Feature/arduino_uno_port  
 
