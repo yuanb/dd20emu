@@ -50,7 +50,7 @@ void setup() {
     ; // wait for serial port to connect. Needed for native USB port only
   }
 
-  serial_log(PSTR("\r\nVTech DD20 emulator, v0.0.8, 02/20/2021\r\n"));
+  serial_log(PSTR("\r\nVTech DD20 emulator, v0.0.8, 02/21/2021\r\n"));
 
   // put your setup code here, to run once:
   // set the digital pin as output:

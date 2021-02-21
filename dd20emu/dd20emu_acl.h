@@ -94,4 +94,7 @@ const byte stepPin1  = A9;
 const byte stepPin0  = A8;
 #endif
 
+#else
+#error "Unsupported architecture"
+
 #endif  //_DD20EMU_ACL_H_

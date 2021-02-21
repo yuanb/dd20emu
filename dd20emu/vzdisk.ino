@@ -197,7 +197,7 @@ void vzdisk::build_sector_lut()
     }
   }
 
-#if 1 //Dump Sector LUT
+#if 0 //Dump Sector LUT
   //2021-02-07 BUG: The sector_lut is always 1 to 16 on every track for some reason, these must be a calculation error,
   //I suspect Laser310 DI-40 fall out of sync every once a while... there are some retries.
   serial_log(PSTR("\r\nsec_lut:\r\n"));
