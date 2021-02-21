@@ -16,21 +16,12 @@
 #include "PinChangeInterrupt.h"
 #include "vzdisk.h"
 
-
+//DD-20 ACL
 //#define DD20_UNO
 #define DD20_MEGA2560
 
 #ifdef DD20_UNO
 /*
- * Pin definitions, Arduino Uno
- * GND
- * 7,  PD7,    RD Data
- * A5, PC5,    /WRReq
- * A4, PC4,    /EnDrv
- * A3, PC3,    Step3
- * A2, PC2,    Step2
- * A1, PC1,    Step1
- * A0, PC0,    Step0
  * 
  * Arduino Uno pinout 
  * https://upload.wikimedia.org/wikipedia/commons/c/c9/Pinout_of_ARDUINO_Board_and_ATMega328PU.svg
@@ -42,7 +33,21 @@
  * Arduino Uno Pin 10 is used as W5100 CS, can not be used as GPIO
  * 11,12,13 on ICSP header are for SPI
  * https://www.arduino.cc/en/uploads/Main/arduino-ethernet-shield-05-schematic.pdf
- * 
+*/
+
+// SD chip select pin.  Be sure to disable any other SPI devices such as Enet.
+#define SD_CS_PIN 4
+
+/*
+ * Pin definitions, Arduino Uno
+ * GND
+ * 7,  PD7,    RD Data
+ * A5, PC5,    /WRReq
+ * A4, PC4,    /EnDrv
+ * A3, PC3,    Step3
+ * A2, PC2,    Step2
+ * A1, PC1,    Step1
+ * A0, PC0,    Step0
 */
 /* Port and bit for RDDATA */
 #define PORT_RDDATA   PORTD   //rddata.ino
@@ -68,6 +73,8 @@ const byte stepPin1  = A1;
 const byte stepPin0  = A0;
 
 #else //DD20_MEGA2560
+// SD chip select pin.  Be sure to disable any other SPI devices such as Enet.
+#define SD_CS_PIN SS
 
 /*
    Pin definitions, Arduino Mega2560
