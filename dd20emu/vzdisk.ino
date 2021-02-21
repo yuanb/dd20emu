@@ -119,7 +119,7 @@ void vzdisk::build_sector_lut()
       uint8_t SEC= inversed_sec_interleave[buf[12]];
       
       unsigned long expected_offset = (unsigned long)TR*(16*sizeof(sector_t)+padding) + (unsigned long)SEC*sizeof(sector_t);
-      int delta = offset + 0 - expected_offset;
+      int delta = offset + 1 - expected_offset;
 #if 0
       sec_lut[TR][SEC] = delta;
 #else
