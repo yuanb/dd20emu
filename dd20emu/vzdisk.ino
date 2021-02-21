@@ -1,8 +1,5 @@
 //#define DEBUG_TRACK 1
 
-// SD chip select pin.  Be sure to disable any other SPI devices such as Enet.
-#define SD_CS_PIN SS
-
 /**
  * Disk image formats:
  * Type 1. file size 98,560 bytes, 40 tracks x 16 sectors x 154 bytes
@@ -128,8 +125,10 @@ void vzdisk::build_sector_lut()
       sec_lut[TR][SEC] = delta - TR*16 - SEC;
 
       if (oldTR!=TR) {
+        serial_log(PSTR("\r\n"));
         oldTR = TR;
       }  
+      serial_log(PSTR("#"));
 #endif
 
       //spec sector size: 154, trim the first byte
@@ -156,8 +155,10 @@ void vzdisk::build_sector_lut()
       sec_lut[TR][SEC] = delta - TR*16 - SEC;
 
       if (oldTR!=TR) {
+        serial_log(PSTR("\r\n"));
         oldTR = TR;
       }   
+      serial_log(PSTR("."));
 #endif
 
       //Exceptional sector size: 153      
@@ -174,10 +175,10 @@ void vzdisk::build_sector_lut()
     }
   }
 
-#if 0 //Dump Sector LUT
+#if 1 //Dump Sector LUT
   //2021-02-07 BUG: The sector_lut is always 1 to 16 on every track for some reason, these must be a calculation error,
   //I suspect Laser310 DI-40 fall out of sync every once a while... there are some retries.
-  serial_log(PSTR("\r\n"));
+  serial_log(PSTR("\r\nsec_lut:\r\n"));
   for(int i=0; i<TRK_NUM; i++)
   {
     serial_log(PSTR("TR: %02d - "),i);
