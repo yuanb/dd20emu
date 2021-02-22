@@ -27,16 +27,20 @@ Active feature branches:
 Feature/mega2560_using_int8_sector_lut  
 Feature/arduino_uno_port  
 
-2020-11/01
+2020-11/01  
+Sector lut finished. Tested with hello.dsk disk image.  
 
-Sector lut finished. Tested with hello.dsk disk image. 
+2020-10-06  
+First file loadded from Arduino DD20 emu.  
 
-2020-09-20
+2020-09-27  
+First time track#0 is emulated.  
+[![DD20emu](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/dd20emu_di_40.jpg)](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/dd20emu_di_40.jpg)
 
+2020-09-20  
 [![DI-40 Reborn](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/DI-40reborn.jpg)](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/DI-40reborn.jpg)
 
-2020-07-19 
-
+2020-07-19  
 This picture shows the RDData input is sent to 74LS164 A pin, and the D0 on port 11 read(FM Decoding). To get a byte, DI-40 needs to read from port 11 eight times.
 [![FM Decoding](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/RDData%20to%20D0%20on%20port%2011%20read.png)](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/RDData%20to%20D0%20on%20port%2011%20read.png)
 
