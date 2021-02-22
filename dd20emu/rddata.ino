@@ -49,7 +49,12 @@ extern vzdisk* vzdsk;
 inline void put_sector(uint8_t n, uint8_t s)
 {
   if (vzdsk->get_sector(n, s) != -1)
-  {     
+  {
+    //In theory, this should speed up disk read a bit
+    //Track has changed while reading sector from SD, skip playing back
+    if (n != vtech1_track_x2/2)
+      return;
+
     for(int j=0; j < SECSIZE_VZ; j++)
     {
       byte v = (byte *)fdc_sector[j];
