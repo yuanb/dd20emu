@@ -11,6 +11,11 @@
  *  PinChangeInterrupt : Tested 1.2.8, https://github.com/NicoHood/PinChangeInterrupt
  */
 
+/*
+ * TODO: CLI interface
+ *        https://www.norwegiancreations.com/2018/02/creating-a-command-line-interface-in-arduinos-serial-monitor/
+ * 
+ */
 #include <SPI.h>
 #include "SdFat.h"
 #include "PinChangeInterrupt.h"
