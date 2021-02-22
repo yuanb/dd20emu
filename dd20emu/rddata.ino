@@ -16,22 +16,25 @@
 #define FM_BIT_1  delay_11us; RD_HIGH;  delay_1us;  RD_LOW; delay_20us;
 #define FM_BIT_0  delay_31_2us;
 
-byte bitmask[8] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
+byte bitmask[8] = { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 };
 
 #define FM_ENCODE_BIT(v,m) {  if (v & m) { FM_BIT_1; } else { FM_BIT_0; } }
 
 #define FM_OUTPUT_BIT(v,m) { RD_HIGH; delay_1us; RD_LOW;  FM_ENCODE_BIT(v,m); }
 
+/*
+ * Soft SPI, Most Significant Bit (MSB) first
+ */
 inline void put_byte(byte v)
 {
-  FM_OUTPUT_BIT(v,bitmask[0]);
-  FM_OUTPUT_BIT(v,bitmask[1]);
-  FM_OUTPUT_BIT(v,bitmask[2]);
-  FM_OUTPUT_BIT(v,bitmask[3]);
-  FM_OUTPUT_BIT(v,bitmask[4]);
-  FM_OUTPUT_BIT(v,bitmask[5]);
-  FM_OUTPUT_BIT(v,bitmask[6]);
   FM_OUTPUT_BIT(v,bitmask[7]);
+  FM_OUTPUT_BIT(v,bitmask[6]);
+  FM_OUTPUT_BIT(v,bitmask[5]);
+  FM_OUTPUT_BIT(v,bitmask[4]);
+  FM_OUTPUT_BIT(v,bitmask[3]);
+  FM_OUTPUT_BIT(v,bitmask[2]);
+  FM_OUTPUT_BIT(v,bitmask[1]);
+  FM_OUTPUT_BIT(v,bitmask[0]);
 }
 
 uint8_t current_sector = 0;
