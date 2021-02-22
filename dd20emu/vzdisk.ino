@@ -1,5 +1,3 @@
-//#define DEBUG_TRACK 1
-
 /**
  * Disk image formats:
  * Type 1. file size 98,560 bytes, 40 tracks x 16 sectors x 154 bytes
@@ -9,10 +7,14 @@
 
 uint8_t fdc_sector[SECSIZE_VZ];
 
-const int sector_interleave[SEC_NUM] = { 0, 11, 6, 1, 12, 7, 2, 13, 8, 3, 14, 9, 4, 15, 10, 5 };
-const int inversed_sec_interleave[SEC_NUM] = {0, 3, 6, 9, 12, 15, 2, 5, 8, 11, 14, 1, 4, 7, 10, 13};
+//used in get_sector()
+const uint8_t sector_interleave[SEC_NUM] PROGMEM = { 0, 11, 6, 1, 12, 7, 2, 13, 8, 3, 14, 9, 4, 15, 10, 5 };
 
-int8_t sec_lut[40][8] = { 0 };
+//used in build_sector_lut()
+const uint8_t inversed_sec_interleave[SEC_NUM] PROGMEM = {0, 3, 6, 9, 12, 15, 2, 5, 8, 11, 14, 1, 4, 7, 10, 13};
+
+/*40 tracks, 8 bytes/track packed*/
+int8_t sec_lut[TRK_NUM][SEC_NUM/2] = { 0 };
 
 #include "vzdisk.h"
 
@@ -110,18 +112,18 @@ void vzdisk::build_sector_lut()
      *    int delta = offset + 1 - expected_offset;
      *      and
      *    offset += (12 + 141);
+     *  
+     *  If the current sector has spec defined sync bytes, '0' is registered in the sec_lut, otherwise '1' is put in lut to mark a 
+     *  sector with short 5 bytes + 00h sync words
      */
     if (buf[0] == 0x80 && buf[1] == 0x80 && buf[2] == 0x80 && buf[3] == 0x80 && buf[4] == 0x80 && buf[5] == 0x80 &&
         buf[6] == 0x00 && buf[7] == 0xFE && buf[8] == 0xE7 && buf[9] == 0x18 && buf[10]== 0xC3)
     {
       uint8_t TR = buf[11];
-      uint8_t SEC= inversed_sec_interleave[buf[12]];
+      uint8_t SEC= pgm_read_byte_near(&inversed_sec_interleave[buf[12]]);
       
       unsigned long expected_offset = (unsigned long)TR*(16*sizeof(sector_t)+padding) + (unsigned long)SEC*sizeof(sector_t);
       int delta = offset + 1 - expected_offset;
-#if 0
-      sec_lut[TR][SEC] = delta;
-#else
       uint8_t value = delta - TR*16 - SEC;
       if (SEC%2==0) {
         //high half
@@ -132,18 +134,11 @@ void vzdisk::build_sector_lut()
       }
 
       if (oldTR!=TR) {
-#if 0        
-        serial_log(PSTR("\r\n"));
-#endif
         oldTR = TR;
       }
-#if 0        
-      serial_log(PSTR("0"));
-#endif
-#endif
 
-      //spec sector size: 154, trim the first byte
-      offset += (12 + 141);
+      //7 bytes GAP1, 4 bytes IDAM leading, 1 byte TR, 1 byte SEC
+      offset += (7 + 4 + 1 + 0 + SEC_REMAINING);
       sectors++;
       
       //if this is the last sector of  
@@ -156,13 +151,10 @@ void vzdisk::build_sector_lut()
         buf[6] == 0xFE && buf[7] == 0xE7 && buf[8] == 0x18 && buf[9] == 0xC3)
     {
       uint8_t TR = buf[10];
-      uint8_t SEC = inversed_sec_interleave[buf[11]];
+      uint8_t SEC = pgm_read_byte_near(&inversed_sec_interleave[buf[11]]);
       
       unsigned long expected_offset = (unsigned long)TR*(16*sizeof(sector_t)+padding) + (unsigned long)SEC*sizeof(sector_t);
       int delta = offset - expected_offset;
-#if 0
-      sec_lut[TR][SEC] = delta;
-#else
       uint8_t value = delta - TR*16 - SEC;   
       if (SEC%2==0) {
         //high half
@@ -173,18 +165,12 @@ void vzdisk::build_sector_lut()
       }    
       
       if (oldTR!=TR) {
-#if 0        
-        serial_log(PSTR("\r\n"));
-#endif
         oldTR = TR;
       }
-#if 0         
-      serial_log(PSTR("1"));
-#endif
-#endif
 
-      //Exceptional sector size: 153      
-      offset += (12 + 141);
+      //Exceptional sector size: 153   
+      //6 bytes GAP1, 4 bytes IDAM leading, 1 byte TR, 1 byte SEC   
+      offset += (6 + 4 + 1 + 1 + SEC_REMAINING);
       sectors++;
        
       //if this is the last sector of  
@@ -197,10 +183,8 @@ void vzdisk::build_sector_lut()
     }
   }
 
-#if 0 //Dump Sector LUT
-  //2021-02-07 BUG: The sector_lut is always 1 to 16 on every track for some reason, these must be a calculation error,
-  //I suspect Laser310 DI-40 fall out of sync every once a while... there are some retries.
-  serial_log(PSTR("\r\nsec_lut:\r\n"));
+#if 1 //Dump Sector LUT
+  serial_log(PSTR("\r\nsec_lut: '0' means 6x80h+1x00h; '1' mean 5x80h+1x00h \r\n"));
   for(int i=0; i<TRK_NUM; i++)
   {
     serial_log(PSTR("TR:%02d  "),i);
@@ -212,8 +196,7 @@ void vzdisk::build_sector_lut()
   }
 #endif
 
-  serial_log(PSTR("Finished, used %d ms.\r\n"), millis()-elapsed);
-  serial_log(PSTR("Sectors found: %d\r\n"), sectors);
+  serial_log(PSTR("Found %d sectors in %d ms.\r\n"), sectors, millis()-elapsed);
 }
 
 /**
@@ -224,32 +207,24 @@ int vzdisk::get_sector(uint8_t n, uint8_t s)
 {
   int result = -1;
   if (n<TRK_NUM && s<SEC_NUM)
-  {
-#if 0
-    unsigned long expected_offset = (unsigned long)n*(16*sizeof(sector_t)+padding) + (unsigned long)s*sizeof(sector_t);
-    unsigned long calculated_offset = expected_offset + sec_lut[n][s];  
-#else    
+  {  
     unsigned long expected_offset = (unsigned long)n*(SEC_NUM*sizeof(sector_t)+padding) + (unsigned long)s*sizeof(sector_t);
-    uint8_t value = s%2==0 ? (sec_lut[n][s] >>4): (sec_lut[n][s] & 0x0F);
+    uint8_t value = s%2==0 ? (sec_lut[n][s] >>4) : (sec_lut[n][s] & 0x0F);
+
+    //Adjust offset!!!!!!!!!!!!!!
     unsigned long calculated_offset = expected_offset + (value + n*16 + s);
-#endif
 
     if (file.seek(calculated_offset) != false)
     { 
       result= file.read(fdc_sector, SECSIZE_VZ);
-
-#ifdef   NORMALIZEZD_SECTOR_HDR      
+    
       if (result != -1)
-      {
-#if 1      
+      { 
         sec_hdr_t *sec_hdr = (sec_hdr_t *)fdc_sector;
-#else
-        sec_hdr_t *sec_hdr = (sec_hdr_t *)fdc_sector + sec_lut[n][s];
-#endif
         
-        //FE, E7, 18, C3
+        //IDAM leading, TR, SC checking
         if (sec_hdr->IDAM_leading[0] == 0xFE && sec_hdr->IDAM_leading[1] == 0xE7 && sec_hdr->IDAM_leading[2] == 0x18 && sec_hdr->IDAM_leading[3] == 0xC3) {
-          if (n == sec_hdr->TR && sector_interleave[s] == sec_hdr->SC) {
+          if (n == sec_hdr->TR && pgm_read_byte_near(&sector_interleave[s]) == sec_hdr->SC) {
             return result;
           }
           else {
@@ -263,8 +238,6 @@ int vzdisk::get_sector(uint8_t n, uint8_t s)
       else {
         serial_log(PSTR("Failed to read T:%d, S%d\r\n"), n, s);
       }
-#endif
-
     }
     else {
       serial_log(PSTR("Failed to seek to T:%d, S%d\r\n"), n, s);

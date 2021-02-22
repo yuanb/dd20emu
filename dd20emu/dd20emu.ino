@@ -34,6 +34,7 @@
 //char filename[] = "FLOPPY1.DSK";
 
 //Disk image format 2 (formatted from vzemu), fsize = 99185
+//TODO : "GHOST2" Disk I/O Error, Invalid IDAM on TR 39
 char filename[] = "HELLO.DSK";
 
 //Disk image format 2(created from empty file from vzemu)

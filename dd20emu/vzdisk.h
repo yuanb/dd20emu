@@ -6,8 +6,9 @@
 #define SEC_NUM     16
 #define SECSIZE_VZ  154
 #define TRKSIZE_VZ  SECSIZE_VZ * SEC_NUM    //2464
-#define TRKSIZE_VZ_PADDED TRKSIZE_VZ + 16
+//#define TRKSIZE_VZ_PADDED TRKSIZE_VZ + 16
 
+//Since most of the sectors in various formats of disk images have short sync words ( 5x80h, 00h ), we can that normailized sector
 #define  NORMALIZED_SECTOR_HDR   1
  
 typedef struct SectorHeader {
@@ -27,6 +28,9 @@ typedef struct SectorHeader {
   uint8_t   IDAM_closing[4];  //C3, 18, E7, FE
 } sec_hdr_t;
 
+//defines the remaining # of bytes after SC field in sector header
+#define SEC_HDR_REMAINING   sizeof((sec_hdr_t*)0)->TS_sum + sizeof((sec_hdr_t*)0)->GAP2 + sizeof((sec_hdr_t*)0)->IDAM_closing
+
 typedef struct Sector {
   sec_hdr_t   header;
   uint8_t     data_bytes[126];
@@ -34,6 +38,10 @@ typedef struct Sector {
   uint8_t     next_sector;
   uint16_t    checksum;
 } sector_t;
+
+//defines the remaing # of bytes after sec_hdr_t.SC field in a sector
+#define SEC_REMAINING       SEC_HDR_REMAINING + sizeof((sector_t*)0)->data_bytes + sizeof((sector_t*)0)->next_track + \
+                            sizeof((sector_t*)0)->next_sector + sizeof((sector_t*)0)->checksum
 
 typedef struct Track {
   sector_t    sector[16];

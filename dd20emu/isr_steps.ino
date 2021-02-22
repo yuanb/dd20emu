@@ -14,12 +14,6 @@ uint8_t vtech1_track_x2 = PARKED_TRACK;
 #define PHI2(n) (((n)>>PIN_STEP2_BIT)&1)
 #define PHI3(n) (((n)>>PIN_STEP3_BIT)&1)
 
-//Current value of step phase
-#define STEP0 (1<<PIN_STEP0_BIT)
-#define STEP1 (1<<PIN_STEP1_BIT)
-#define STEP2 (1<<PIN_STEP2_BIT)
-#define STEP3 (1<<PIN_STEP3_BIT)
-
 void handle_steps() {
   if (!drv_enabled)
     return;

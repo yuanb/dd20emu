@@ -33,12 +33,15 @@
 /* Port and bit for RDDATA */
 #define PORT_RDDATA   PORTD   //rddata.ino
 #define RD_DATA_BIT 4
+#define RD_DATA_MASK   (1<<RD_DATA_BIT)
 const byte rdDataPin = 4;
 
 /* Port and bits for /EnDrv and /WRReq */
 #define PORT_CTL      PIND    //isr.ino
 #define PIN_EN_BIT      3
 #define PIN_WRREQ_BIT   2
+#define PIN_EN_MASK     (1<<PIN_EN_BIT)
+#define PIN_WRREQ_MASK  (1<<PIN_WRREQ_BIT)
 const byte enDrvPin  = 3;
 const byte wrReqPin  = 2;
 
@@ -48,6 +51,10 @@ const byte wrReqPin  = 2;
 #define PIN_STEP2_BIT   2
 #define PIN_STEP1_BIT   1
 #define PIN_STEP0_BIT   0
+#define STEP3 (1<<PIN_STEP3_BIT)
+#define STEP2 (1<<PIN_STEP2_BIT)
+#define STEP1 (1<<PIN_STEP1_BIT)
+#define STEP0 (1<<PIN_STEP0_BIT)
 const byte stepPin3  = A3;
 const byte stepPin2  = A2;
 const byte stepPin1  = A1;
