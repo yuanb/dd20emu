@@ -8,10 +8,10 @@
 uint8_t fdc_sector[SECSIZE_VZ];
 
 //used in get_sector()
-const uint8_t sector_interleave[SEC_NUM] = { 0, 11, 6, 1, 12, 7, 2, 13, 8, 3, 14, 9, 4, 15, 10, 5 };
+const uint8_t sector_interleave[SEC_NUM] PROGMEM = { 0, 11, 6, 1, 12, 7, 2, 13, 8, 3, 14, 9, 4, 15, 10, 5 };
 
 //used in build_sector_lut()
-const uint8_t inversed_sec_interleave[SEC_NUM] = {0, 3, 6, 9, 12, 15, 2, 5, 8, 11, 14, 1, 4, 7, 10, 13};
+const uint8_t inversed_sec_interleave[SEC_NUM] PROGMEM = {0, 3, 6, 9, 12, 15, 2, 5, 8, 11, 14, 1, 4, 7, 10, 13};
 
 /*40 tracks, 8 bytes/track packed*/
 int8_t sec_lut[TRK_NUM][SEC_NUM/2] = { 0 };
@@ -120,7 +120,7 @@ void vzdisk::build_sector_lut()
         buf[6] == 0x00 && buf[7] == 0xFE && buf[8] == 0xE7 && buf[9] == 0x18 && buf[10]== 0xC3)
     {
       uint8_t TR = buf[11];
-      uint8_t SEC= inversed_sec_interleave[buf[12]];
+      uint8_t SEC= pgm_read_byte_near(&inversed_sec_interleave[buf[12]]);
       
       unsigned long expected_offset = (unsigned long)TR*(16*sizeof(sector_t)+padding) + (unsigned long)SEC*sizeof(sector_t);
       int delta = offset + 1 - expected_offset;
@@ -151,7 +151,7 @@ void vzdisk::build_sector_lut()
         buf[6] == 0xFE && buf[7] == 0xE7 && buf[8] == 0x18 && buf[9] == 0xC3)
     {
       uint8_t TR = buf[10];
-      uint8_t SEC = inversed_sec_interleave[buf[11]];
+      uint8_t SEC = pgm_read_byte_near(&inversed_sec_interleave[buf[11]]);
       
       unsigned long expected_offset = (unsigned long)TR*(16*sizeof(sector_t)+padding) + (unsigned long)SEC*sizeof(sector_t);
       int delta = offset - expected_offset;
@@ -210,6 +210,8 @@ int vzdisk::get_sector(uint8_t n, uint8_t s)
   {  
     unsigned long expected_offset = (unsigned long)n*(SEC_NUM*sizeof(sector_t)+padding) + (unsigned long)s*sizeof(sector_t);
     uint8_t value = s%2==0 ? (sec_lut[n][s] >>4) : (sec_lut[n][s] & 0x0F);
+
+    //Adjust offset!!!!!!!!!!!!!!
     unsigned long calculated_offset = expected_offset + (value + n*16 + s);
 
     if (file.seek(calculated_offset) != false)
@@ -217,16 +219,12 @@ int vzdisk::get_sector(uint8_t n, uint8_t s)
       result= file.read(fdc_sector, SECSIZE_VZ);
     
       if (result != -1)
-      {
-#if 1      
+      { 
         sec_hdr_t *sec_hdr = (sec_hdr_t *)fdc_sector;
-#else
-        sec_hdr_t *sec_hdr = (sec_hdr_t *)fdc_sector + sec_lut[n][s];
-#endif
         
-        //IDAM leadig : FE, E7, 18, C3
+        //IDAM leading, TR, SC checking
         if (sec_hdr->IDAM_leading[0] == 0xFE && sec_hdr->IDAM_leading[1] == 0xE7 && sec_hdr->IDAM_leading[2] == 0x18 && sec_hdr->IDAM_leading[3] == 0xC3) {
-          if (n == sec_hdr->TR && sector_interleave[s] == sec_hdr->SC) {
+          if (n == sec_hdr->TR && pgm_read_byte_near(&sector_interleave[s]) == sec_hdr->SC) {
             return result;
           }
           else {
