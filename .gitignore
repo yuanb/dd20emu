@@ -1,2 +1,4 @@
 src/dd20emu
 
+.DS_Store
+*.lst
