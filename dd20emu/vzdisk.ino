@@ -1,3 +1,21 @@
+/*
+    DD-20 emulator
+    Copyright (C) 2020,2021 https://github.com/yuanb/
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 /**
  * Disk image formats:
  * Type 1. file size 98,560 bytes, 40 tracks x 16 sectors x 154 bytes
@@ -123,6 +141,7 @@ void vzdisk::build_sector_lut()
       uint8_t SEC= pgm_read_byte_near(&inversed_sec_interleave[buf[12]]);
       
       unsigned long expected_offset = (unsigned long)TR*(16*sizeof(sector_t)+padding) + (unsigned long)SEC*sizeof(sector_t);
+      //TODO: Correct value : change 1 to 0 for 7 bytes header
       int delta = offset + 1 - expected_offset;
       uint8_t value = delta - TR*16 - SEC;
       if (SEC%2==0) {
@@ -138,6 +157,7 @@ void vzdisk::build_sector_lut()
       }
 
       //7 bytes GAP1, 4 bytes IDAM leading, 1 byte TR, 1 byte SEC
+      //TODO: Correct value : change 0 to 1 for 7 bytes header
       offset += (7 + 4 + 1 + 0 + SEC_REMAINING);
       sectors++;
       
