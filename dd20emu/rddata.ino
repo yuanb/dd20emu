@@ -1,4 +1,22 @@
-//Good values
+/*
+    DD-20 emulator
+    Copyright (C) 2020,2021 https://github.com/yuanb/
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+//Tested values
 
 //FM encoded 0 : ___n__________n___ : 1.125us + 31.75us
 //FM encoded 1 : ___n___n______n___ : 1.125us + 11 us + 1.125us + 20 us
