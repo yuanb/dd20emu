@@ -29,6 +29,6 @@ empty.dsk, 99,200 bytes
 Track size: 2480  
 2480x40 = 99200  
 
-
+Every track is padded with 16 bytes of '0' including the last track  
 
 
