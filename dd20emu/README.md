@@ -1,3 +1,5 @@
+Due to limited interrupt pins on Arduino UNO. The implementation has been changed to use PCINT interrupts.
+
 ### Arduino UNO implementation  
 
 ~~~
@@ -43,3 +45,4 @@ Step3 is on PK3[Input]
 /En Drv is on PG2[Input]  
 /WR Req is on PG3[Input]  
 RD Data is on PG5[Output]  
+
