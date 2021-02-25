@@ -140,7 +140,7 @@ void vzdisk::build_sector_lut()
       uint8_t TR = buf[11];
       uint8_t SEC= pgm_read_byte_near(&inversed_sec_interleave[buf[12]]);
       
-      unsigned long expected_offset = (unsigned long)TR*(16*sizeof(sector_t)+padding) + (unsigned long)SEC*sizeof(sector_t);
+      unsigned long expected_offset = (unsigned long)TR*(SEC_NUM*sizeof(sector_t)+padding) + (unsigned long)SEC*sizeof(sector_t);
       //TODO: Correct value : change 1 to 0 for 7 bytes header
       int delta = offset + 1 - expected_offset;
       uint8_t value = delta - TR*16 - SEC;
@@ -173,7 +173,7 @@ void vzdisk::build_sector_lut()
       uint8_t TR = buf[10];
       uint8_t SEC = pgm_read_byte_near(&inversed_sec_interleave[buf[11]]);
       
-      unsigned long expected_offset = (unsigned long)TR*(16*sizeof(sector_t)+padding) + (unsigned long)SEC*sizeof(sector_t);
+      unsigned long expected_offset = (unsigned long)TR*(SEC_NUM*sizeof(sector_t)+padding) + (unsigned long)SEC*sizeof(sector_t);
       int delta = offset - expected_offset;
       uint8_t value = delta - TR*16 - SEC;   
       if (SEC%2==0) {
