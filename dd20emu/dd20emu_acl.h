@@ -40,7 +40,7 @@
 /*
  * Pin definitions, Arduino Uno
  * GND
- * 7,  PD7,    RD Data
+ * 4,  PD4,    RD Data
  * A5, PC5,    /WRReq
  * A4, PC4,    /EnDrv
  * A3, PC3,    Step3
