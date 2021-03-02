@@ -82,17 +82,22 @@ int check_gap1(uint8_t* buf, uint8_t* TR, uint8_t* SEC)
 {
     int gap1_size = -1;
 
-    if (buf[0] == 0x80 && buf[1] == 0x80 && buf[2] == 0x80 && buf[3] == 0x80 && buf[4] == 0x80 && buf[5] == 0x80 &&
-        buf[6] == 0x00 && buf[7] == 0xFE && buf[8] == 0xE7 && buf[9] == 0x18 && buf[10]== 0xC3) {
-        gap1_size = 7;
-        *TR = buf[11];
-        *SEC = buf[12];
-    }
-    else if (buf[0] == 0x80 && buf[1] == 0x80 && buf[2] == 0x80 && buf[3] == 0x80 && buf[4] == 0x80 && buf[5] == 0x00 &&
-            buf[6] == 0xFE && buf[7] == 0xE7 && buf[8] == 0x18 && buf[9] == 0xC3) {
-        gap1_size = 6;
-        *TR = buf[10];
-        *SEC = buf[11];
+    //Sync bytes
+    if (*buf++ == 0x80 && *buf++ == 0x80 && *buf++ == 0x80 && *buf++ == 0x80 && *buf++ == 0x80)
+    {
+        if (*buf == 0x80) {
+            buf++;
+            if (*buf++ == 0x00) {
+                gap1_size = 7;
+            }
+        } else if (*buf++ == 0x00) {
+            gap1_size = 6;
+        }
+        //IDAM
+        if (*buf++ == 0xFE && *buf++ == 0xE7 && *buf++ == 0x18 && *buf++ == 0xC3) {
+            *TR = *buf++;
+            *SEC = *buf;
+        }
     }
 
     return gap1_size;
