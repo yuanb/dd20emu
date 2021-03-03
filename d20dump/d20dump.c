@@ -60,14 +60,14 @@ int check_disk_type(FILE *fp)
         }
 
         bool padding_found = true; 
-        for(int i=0; i<PADDING_SIZE; i++) {
+        for(int i=0; i<sizeof(padding_bytes); i++) {
             if (padding_bytes[i] != 0) {
                 padding_found = false;
                 break;
             }
         }
         if (padding_found == true) {
-            padding = 16;
+            padding = PADDING_SIZE;
         }
         printf("Type 2/3 format, padding = %d bytes\r\n", padding);
         result = fsize;
