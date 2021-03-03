@@ -30,6 +30,8 @@ typedef struct SectorHeader {
     uint8_t     IDAM_closing[4];//C3, 18, E7, FE
 } sec_hdr_t;
 
+#define LUT_SCAN_STEP   sizeof((sec_hdr_t*)0)->GAP1 + sizeof((sec_hdr_t*)0)->IDAM_leading + sizeof((sec_hdr_t*)0)->TR + sizeof((sec_hdr_t*)0)->SC
+
 //defines the remaining # of bytes after SC field in sector header
 #define SEC_HDR_REMAINING   sizeof((sec_hdr_t*)0)->TS_sum + sizeof((sec_hdr_t*)0)->GAP2 + sizeof((sec_hdr_t*)0)->IDAM_closing
 

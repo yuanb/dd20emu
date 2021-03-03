@@ -103,7 +103,6 @@ int sync_gap1(uint8_t* buf, uint8_t* TR, uint8_t* SEC)
     return gap1_size;
 }
 
-#define LUT_SCAN_STEP   13
 int build_sector_lut(FILE *fp, long int fsize)
 {
     uint8_t buf[LUT_SCAN_STEP] = {0};
