@@ -78,7 +78,7 @@ int check_disk_type(FILE *fp)
     return result;
 }
 
-int check_gap1(uint8_t* buf, uint8_t* TR, uint8_t* SEC)
+int sync_gap1(uint8_t* buf, uint8_t* TR, uint8_t* SEC)
 {
     int gap1_size = -1;
 
@@ -120,7 +120,7 @@ int build_sector_lut(FILE *fp, long int fsize)
             break;
         }
 
-        int gap1_size = check_gap1(buf, &TR, &SEC);
+        int gap1_size = sync_gap1(buf, &TR, &SEC);
         if (gap1_size != -1) {
             uint8_t SEC_IDX = reversed_index_sec_interleave[SEC];
             sec_lut[TR][SEC_IDX] = offset - TR*(TRKSIZE_VZ+padding) - SEC_IDX*SECSIZE_VZ;
@@ -164,8 +164,8 @@ int validate_sector_lut(FILE *fp)
                 printf("fread failed\r\n");
                 return result;
             }
-            int gap1_size = check_gap1(buf, &TR, &SEC);
-            if (check_gap1(buf, &TR, &SEC) ==-1)
+            int gap1_size = sync_gap1(buf, &TR, &SEC);
+            if (sync_gap1(buf, &TR, &SEC) ==-1)
             {
               printf("check_gap1 failed at [%d][%d]\r\n", i,j);
               return result;
