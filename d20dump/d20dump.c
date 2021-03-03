@@ -123,6 +123,7 @@ int build_sector_lut(FILE *fp, long int fsize)
         if (gap1_size != -1) {
             uint8_t SEC_IDX = reversed_index_sec_interleave[SEC];
             sec_lut[TR][SEC_IDX] = offset - TR*(TRKSIZE_VZ+padding) - SEC_IDX*SECSIZE_VZ;
+            //printf("TR:%d, SEC_IDX:%d, value:%d\r\n", TR, SEC_IDX, sec_lut[TR][SEC_IDX]);
 
             //7 bytes GAP1, 4 bytes IDAM leading, 1 byte TR, 1 byte SEC
             //6 bytes GAP1, 4 bytes IDAM leading, 1 byte TR, 1 byte SEC   
@@ -143,6 +144,18 @@ int build_sector_lut(FILE *fp, long int fsize)
             //printf("\t\tnext offset to read:%04lX\r\n", offset);
         }
     }
+
+#if 1 //Dump Sector LUT
+    for(int i=0; i<TRK_NUM; i++)
+    {
+        printf("TR:%02d  ",i);
+        for(int j=0; j<SEC_NUM; j++)
+        {
+            printf("%d ", sec_lut[i][j]);
+        }
+        printf("\r\n");
+    }
+#endif
 
     return sectors;
 }

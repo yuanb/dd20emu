@@ -19,6 +19,8 @@
 /* Libraries used:
  *  SDFat : Author : Bill Greiman, Tested: 2.0.4, https://github.com/greiman/SdFat
  *  PinChangeInterrupt : Tested 1.2.8, https://github.com/NicoHood/PinChangeInterrupt
+ *  
+ *  Libraries can be installed from Arduino IDE menu Tools\Manage Libraries
  */
 
 /*
