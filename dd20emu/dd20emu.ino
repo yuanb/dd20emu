@@ -25,7 +25,8 @@
  * TODO: 
  * 1. CLI interface
  *        https://www.norwegiancreations.com/2018/02/creating-a-command-line-interface-in-arduinos-serial-monitor/
- * 
+ * 2. Mac Floppy Emu on Arduino
+ *        https://github.com/yuanb/mac-floppy-emu/tree/master/floppy_emu_arduino
  */
 
 #include <SPI.h>
