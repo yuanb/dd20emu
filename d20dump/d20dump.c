@@ -24,7 +24,7 @@ const uint8_t sector_interleave[SEC_NUM] = { 0, 11, 6, 1, 12, 7, 2, 13, 8, 3, 14
 const uint8_t reversed_index_sec_interleave[SEC_NUM] = {0, 3, 6, 9, 12, 15, 2, 5, 8, 11, 14, 1, 4, 7, 10, 13};
 
 /*40 tracks, 8 bytes/track packed*/
-uint32_t sec_lut[TRK_NUM][SEC_NUM] = { 0 };
+uint8_t sec_lut[TRK_NUM][SEC_NUM] = { 0 };
 
 /**
  *  return:
@@ -123,7 +123,7 @@ int build_sector_lut(FILE *fp, long int fsize)
         int gap1_size = check_gap1(buf, &TR, &SEC);
         if (gap1_size != -1) {
             uint8_t SEC_IDX = reversed_index_sec_interleave[SEC];
-            sec_lut[TR][SEC_IDX] = offset;
+            sec_lut[TR][SEC_IDX] = offset - TR*(TRKSIZE_VZ+padding) - SEC_IDX*SECSIZE_VZ;
 
             //7 bytes GAP1, 4 bytes IDAM leading, 1 byte TR, 1 byte SEC
             //6 bytes GAP1, 4 bytes IDAM leading, 1 byte TR, 1 byte SEC   
@@ -158,7 +158,7 @@ int validate_sector_lut(FILE *fp)
     {
         for(int j=0; j<SEC_NUM; j++)
         {
-            uint32_t offset = sec_lut[i][j];
+            uint32_t offset = sec_lut[i][j] + i*(TRKSIZE_VZ+padding) + j*SECSIZE_VZ;
             fseek(fp, offset, SEEK_SET);
             if (fread(buf, sizeof(buf), 1, fp) != 1) {
                 printf("fread failed\r\n");
