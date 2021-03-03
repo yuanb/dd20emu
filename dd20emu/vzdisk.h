@@ -72,7 +72,7 @@ class vzdisk {
     void set_track_padding();
     int sync_gap1(uint8_t* buf, uint8_t* TR, uint8_t* SEC);
     void build_sector_lut();
-    int get_sector(uint8_t TR, uint8_t SEC);    
+    int get_sector(uint8_t n, uint8_t s);    
 
   protected:
     int get_track(int n);

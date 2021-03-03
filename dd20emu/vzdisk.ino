@@ -32,7 +32,7 @@ const uint8_t sector_interleave[SEC_NUM] PROGMEM = { 0, 11, 6, 1, 12, 7, 2, 13, 
 const uint8_t inversed_sec_interleave[SEC_NUM] PROGMEM = {0, 3, 6, 9, 12, 15, 2, 5, 8, 11, 14, 1, 4, 7, 10, 13};
 
 /*40 tracks, 8 bytes/track packed*/
-int8_t sec_lut[TRK_NUM][SEC_NUM/2] = { 0 };
+uint8_t sec_lut[TRK_NUM][SEC_NUM/2] = { 0 };
 
 #include "vzdisk.h"
 
@@ -101,6 +101,31 @@ void vzdisk::set_track_padding()
       serial_log(PSTR("%s is type 2/3 image, padding = %d bytes\r\n"), filename, padding);
     }
   }  
+}
+
+int vzdisk::sync_gap1(uint8_t* buf, uint8_t* TR, uint8_t* SEC)
+{
+    int gap1_size = -1;
+
+    //Sync bytes
+    if (*buf++ == 0x80 && *buf++ == 0x80 && *buf++ == 0x80 && *buf++ == 0x80 && *buf++ == 0x80)
+    {
+        if (*buf == 0x80) {
+            buf++;
+            if (*buf++ == 0x00) {
+                gap1_size = 7;
+            }
+        } else if (*buf++ == 0x00) {
+            gap1_size = 6;
+        }
+        //IDAM
+        if (*buf++ == 0xFE && *buf++ == 0xE7 && *buf++ == 0x18 && *buf++ == 0xC3) {
+            *TR = *buf++;
+            *SEC = *buf;
+        }
+    }
+
+    return gap1_size;
 }
 
 void vzdisk::build_sector_lut()
