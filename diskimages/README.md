@@ -1,3 +1,7 @@
+MD5 checksums
+
+hello.dsk : 335709d25147ab8046b958ded3ceb226
+
 A few DD20 disk images  
 Sector interlace  0, 11, 6, 1, 12, 7, 2, 13, 8, 3, 14, 9, 4, 15, 10, 5  
 
