@@ -17,15 +17,19 @@
 */
 
 /* Libraries used:
- *  SDFat : Author : Bill Greiman, Tested: 2.0.4, https://github.com/greiman/SdFat
+ *  SDFat : Author : Bill Greiman, Tested: 2.0.5, https://github.com/greiman/SdFat
  *  PinChangeInterrupt : Tested 1.2.8, https://github.com/NicoHood/PinChangeInterrupt
+ *
+ *  Libraries can be installed from Arduino IDE menu Tools\Manage Libraries
  */
 
 /*
  * TODO: 
  * 1. CLI interface
  *        https://www.norwegiancreations.com/2018/02/creating-a-command-line-interface-in-arduinos-serial-monitor/
- * 
+ *        
+ * 2. Mac Floppy Emu on Arduino
+ *        https://github.com/yuanb/mac-floppy-emu/tree/master/floppy_emu_arduino
  */
 
 #include <SPI.h>
