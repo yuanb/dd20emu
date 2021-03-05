@@ -47,14 +47,15 @@ vzdisk::vzdisk()
   }  
 }
 
-int vzdisk::Open(char *filename)
+int vzdisk::Open(char *fname)
 {
   int result = -1;
   if (sdInitialized)
   {
-    if (SD.exists(filename))
+    this->filename = fname;
+    if (SD.exists(this->filename))
     {
-      file = SD.open(filename, FILE_READ);
+      file = SD.open(this->filename, FILE_READ);
       if (file == false)
       {
         serial_log(PSTR("DSK File is not opened"));
@@ -77,8 +78,8 @@ void vzdisk::set_track_padding()
   unsigned long fsize = file.size();
   
   if (fsize == 98560) {
-    serial_log(PSTR("%s is type 1 image, no padding.\r\n"), filename);
-    padding = 0;
+    padding = 0;    
+    serial_log(PSTR("%s is type 1 image, padding= %d bytes\r\n"), this->filename, padding);
   }
   else //if (fsize == 99184 || fsize == 99200)
   {
@@ -87,23 +88,23 @@ void vzdisk::set_track_padding()
       return;
     }
     
-    uint8_t track_padding[16];
-    file.read(track_padding, 16);
+    uint8_t track_padding[PADDING_SIZE];
+    file.read(track_padding, sizeof(track_padding));
     bool padding_found = true;
-    for(int i=0; i<16; i++) {
+    for(int i=0; i<sizeof(track_padding); i++) {
       if (track_padding[i]!=0) {
         padding_found = false;
         break;
       }
     }
     if (padding_found) {
-      padding = 16;
-      serial_log(PSTR("%s is type 2/3 image, padding = %d bytes\r\n"), filename, padding);
+      padding = PADDING_SIZE;
     }
+    serial_log(PSTR("%s is type 2/3 image, padding = %d bytes\r\n"), this->filename, padding);    
   }  
 }
 
-void vzdisk::build_sector_lut()
+int vzdisk::build_sector_lut()
 {
   uint8_t buf[13] = {0};
   uint8_t n[1] = {0};
@@ -217,6 +218,41 @@ void vzdisk::build_sector_lut()
 #endif
 
   serial_log(PSTR("Found %d sectors in %d ms.\r\n"), sectors, millis()-elapsed);
+}
+
+int vzdisk::validate_sector_lut()
+{
+    int result = -1;
+    uint8_t TR, SEC;
+    uint8_t buf[LUT_SCAN_STEP] = {0};
+
+    for(int i=0; i<TRK_NUM; i++)
+    {
+        for(int j=0; j<SEC_NUM; j++)
+        {
+            uint32_t offset = sec_lut[i][j] + (uint32_t)i*(TRKSIZE_VZ+padding) + (uint32_t)j*SECSIZE_VZ;
+            file.seek(offset);
+            file.read(buf, sizeof(buf));
+
+            int gap1_size = sync_gap1(buf, &TR, &SEC);
+            if (sync_gap1(buf, &TR, &SEC) ==-1)
+            {
+              serial_log(PSTR("check_gap1 on offset %04lX failed at [%d][%d]\r\n"), offset, i,j);
+              sync_gap1(buf, &TR, &SEC, 1);
+              return result;
+            }
+
+            if (TR!=i || SEC !=pgm_read_byte_near(&sector_interleave[j]))
+            {
+                serial_log(PSTR("scan_sctor_lut failed at TR=%d, SEC=%d\r\n"), TR, SEC);
+                return result;
+            }
+        }
+    }
+    result = 1;
+
+    serial_log(PSTR("All sector offsets in lut are validated.\r\n"));
+    return result;
 }
 
 /**
