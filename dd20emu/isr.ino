@@ -18,6 +18,8 @@
 
 #define PIN_EN_REG      PORT_CTL
 #define PIN_WR_REG      PORT_CTL
+#define PIN_EN_MASK     (1<<PIN_EN_BIT)
+#define PIN_WRREQ_MASK  (1<<PIN_WRREQ_BIT)
 
 bool drv_enabled = false;
 bool write_request = false;
