@@ -27,6 +27,7 @@
 #define delay_20us  __builtin_avr_delay_cycles (300)
 #define delay_31_2us  __builtin_avr_delay_cycles (488)
 
+#define RD_DATA_MASK   (1<<RD_DATA_BIT)
 #define RD_HIGH   PORT_RDDATA |= RD_DATA_MASK;
 #define RD_LOW    PORT_RDDATA &= ~RD_DATA_MASK;
 
