@@ -119,18 +119,20 @@ int build_sector_lut(FILE *fp, long int fsize)
             break;
         }
 
+        // if (offset>32000)
+        //     return -1;
         int gap1_size = sync_gap1(buf, &TR, &SEC);
         if (gap1_size != -1) {
             uint8_t SEC_IDX = reversed_index_sec_interleave[SEC];
             sec_lut[TR][SEC_IDX] = offset - TR*(TRKSIZE_VZ+padding) - SEC_IDX*SECSIZE_VZ;
-            //printf("TR:%d, SEC_IDX:%d, value:%d\r\n", TR, SEC_IDX, sec_lut[TR][SEC_IDX]);
+            printf("TR:%d, SEC_IDX:%d, value:%d\r\n", TR, SEC_IDX, sec_lut[TR][SEC_IDX]);
 
             //7 bytes GAP1, 4 bytes IDAM leading, 1 byte TR, 1 byte SEC
             //6 bytes GAP1, 4 bytes IDAM leading, 1 byte TR, 1 byte SEC   
-            //printf("offset=%04lX, ", offset);
+            printf("offset=%04lX, ", offset);
             offset += (gap1_size + 4 + 1 + 1 + SEC_REMAINING);
             sectors++;
-            //printf("%d bytes sync : TR: %d, SEC: %d, \tnext offset to read:%04lX\r\n", gap1_size, TR, SEC, offset);
+            printf("%d bytes sync : TR: %d, SEC: %d, \tnext offset to read:%04lX\r\n", gap1_size, TR, SEC, offset);
 
             //if this is the last sector of a track
             if (SEC == sector_interleave[SEC_NUM-1] && padding!=0) {
@@ -139,9 +141,9 @@ int build_sector_lut(FILE *fp, long int fsize)
             }            
         }
         else {
-            //printf("............Searching sync bytes, skipped 1 byte at %04lX, ", offset);
+            printf(".....Syncing, skipped 1 byte at %04lX, ", offset);
             offset++;
-            //printf("\t\tnext offset to read:%04lX\r\n", offset);
+            printf("\t\tnext offset to read:%04lX\r\n", offset);
         }
     }
 

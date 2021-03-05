@@ -17,7 +17,7 @@
 */
 
 /* Libraries used:
- *  SDFat : Author : Bill Greiman, Tested: 2.0.4, https://github.com/greiman/SdFat
+ *  SDFat : Author : Bill Greiman, Tested: 2.0.5, https://github.com/greiman/SdFat
  *  PinChangeInterrupt : Tested 1.2.8, https://github.com/NicoHood/PinChangeInterrupt
  *  
  *  Libraries can be installed from Arduino IDE menu Tools\Manage Libraries
@@ -30,9 +30,14 @@
  * 2. Mac Floppy Emu on Arduino
  *        https://github.com/yuanb/mac-floppy-emu/tree/master/floppy_emu_arduino
  */
+#define  SDFAT
 
 #include <SPI.h>
+#ifdef  SDFAT
 #include "SdFat.h"
+#else
+#include <SD.h>
+#endif
 #include "PinChangeInterrupt.h"
 #include "dd20emu_acl.h"
 #include "vzdisk.h"
@@ -63,6 +68,11 @@ char filename[] = "HELLO.DSK";
 //Disk image format 2?
 //char filename[] ="extbasic.dsk";
 
+//char filename[] = "empty.dsk";
+
+//games.dsk
+//games2.dsk
+
 vzdisk *vzdsk = NULL;
   
 void setup() {
@@ -90,6 +100,7 @@ void setup() {
   vzdsk->Open(filename);
   vzdsk->set_track_padding();  
   vzdsk->build_sector_lut();
+  vzdsk->validate_sector_lut();
 
   attachInterrupt(digitalPinToInterrupt(wrReqPin), writeRequest, CHANGE);
   attachInterrupt(digitalPinToInterrupt(enDrvPin), driveEnabled, CHANGE);
