@@ -249,27 +249,6 @@ int vzdisk::get_sector(uint8_t n, uint8_t s)
         serial_log(PSTR("sync error\r\n"));
         return -1;
       }
-
-      if (result != -1)
-      { 
-        sec_hdr_t *sec_hdr = (sec_hdr_t *)fdc_sector;
-        
-        //IDAM leading, TR, SC checking
-        if (sec_hdr->IDAM_leading[0] == 0xFE && sec_hdr->IDAM_leading[1] == 0xE7 && sec_hdr->IDAM_leading[2] == 0x18 && sec_hdr->IDAM_leading[3] == 0xC3) {
-          if (n == sec_hdr->TR && pgm_read_byte_near(&sector_interleave[s]) == sec_hdr->SC) {
-            return result;
-          }
-          else {
-            serial_log(PSTR("Expecting T:%d, S%d, but got T:%d, S:%d\r\n"), n, s, sec_hdr->TR, sec_hdr->SC);
-          }
-        }
-        else {
-          serial_log(PSTR("Invalid IDAM T:%d, S%d\r\n"), n, s);
-        }
-      }
-      else {
-        serial_log(PSTR("Failed to read T:%d, S%d\r\n"), n, s);
-      }
     }
     else {
       serial_log(PSTR("Failed to seek to T:%d, S%d\r\n"), n, s);
