@@ -1,5 +1,8 @@
 #include "sector_lut.h"
 
+/*40 tracks, 8 bytes/track packed*/
+int8_t sec_lut[TRK_NUM][SEC_NUM/2] = { 0 };
+  
 sector_lut::sector_lut()
 {
   

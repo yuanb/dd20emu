@@ -31,9 +31,6 @@ const uint8_t sector_interleave[SEC_NUM] PROGMEM = { 0, 11, 6, 1, 12, 7, 2, 13, 
 //used in build_sector_lut()
 const uint8_t inversed_sec_interleave[SEC_NUM] PROGMEM = {0, 3, 6, 9, 12, 15, 2, 5, 8, 11, 14, 1, 4, 7, 10, 13};
 
-/*40 tracks, 8 bytes/track packed*/
-int8_t sec_lut[TRK_NUM][SEC_NUM/2] = { 0 };
-
 #include "vzdisk.h"
 
 vzdisk::vzdisk(sector_lut* lut)
@@ -237,33 +234,19 @@ int vzdisk::get_sector(uint8_t n, uint8_t s)
     //Adjust offset!!!!!!!!!!!!!!
     unsigned long calculated_offset = expected_offset + (value + n*16 + s);
 
-    if (file.seek(calculated_offset) != false)
+    if (file.seek(calculated_offset) != false && (result= file.read(fdc_sector, SECSIZE_VZ)) != -1)
     { 
-      result= file.read(fdc_sector, SECSIZE_VZ);
-    
-      if (result != -1)
-      { 
-        sec_hdr_t *sec_hdr = (sec_hdr_t *)fdc_sector;
-        
-        //IDAM leading, TR, SC checking
-        if (sec_hdr->IDAM_leading[0] == 0xFE && sec_hdr->IDAM_leading[1] == 0xE7 && sec_hdr->IDAM_leading[2] == 0x18 && sec_hdr->IDAM_leading[3] == 0xC3) {
-          if (n == sec_hdr->TR && pgm_read_byte_near(&sector_interleave[s]) == sec_hdr->SC) {
-            return result;
-          }
-          else {
-            serial_log(PSTR("Expecting T:%d, S%d, but got T:%d, S:%d\r\n"), n, s, sec_hdr->TR, sec_hdr->SC);
-          }
-        }
-        else {
-          serial_log(PSTR("Invalid IDAM T:%d, S%d\r\n"), n, s);
-        }
+      uint8_t TR, SEC;
+      int gap1_size = lut->sync_gap1(fdc_sector, TR, SEC);
+      if (gap1_size != -1 && TR == n && pgm_read_byte_near(&sector_interleave[s])==SEC) {
+        return result;
       }
       else {
-        serial_log(PSTR("Failed to read T:%d, S%d\r\n"), n, s);
+        serial_log(PSTR("Validate sector header error on TR:%d, SEC:%d\r\n"), n,s);
       }
     }
     else {
-      serial_log(PSTR("Failed to seek to T:%d, S%d\r\n"), n, s);
+      serial_log(PSTR("Failed to seek/read to T:%d, S%d\r\n"), n, s);
     }
   }
   else {
