@@ -120,8 +120,10 @@ int vzdisk::build_sector_lut()
   elapsed = millis();
 
   while(offset <(file.size()-13)) {
-    file.seek(offset);
-    file.read(buf,13);
+    if (file.seek(offset) == false || file.read(buf, 13) == -1) {
+      serial_log(PSTR("Failed on building sector lut table.\r\n"));
+      break;
+    }
 
     gap1_size = lut->sync_gap1(buf, TR, SEC);
     if (gap1_size != -1)

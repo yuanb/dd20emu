@@ -58,13 +58,13 @@
 
 //Disk image format 1, FLOPPY1.DSK and FLOPPY2.DSK
 //Penguin wont load, D1B and VZCAVE wont run. The rest are ok
-char filename[] = "FLOPPY1.DSK";
+//char filename[] = "FLOPPY1.DSK";
 
 //char filename[] ="FLOPPY2.DSK";
 
 //Disk image format 2 (formatted from vzemu), fsize = 99185
 //TODO : "GHOST2" Disk I/O Error, Invalid IDAM on TR 39
-//char filename[] = "HELLO.DSK";
+char filename[] = "HELLO.DSK";
 
 //Disk image format 2(created from empty file from vzemu)
 //char filename[] = "20201016.DSK";
