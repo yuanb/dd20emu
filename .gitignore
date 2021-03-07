@@ -2,3 +2,4 @@ src/dd20emu
 
 .DS_Store
 *.lst
+d20dump/a.out
