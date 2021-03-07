@@ -42,7 +42,7 @@
 /*
  * Soft SPI, Most Significant Bit (MSB) first
  */
-inline void put_byte(byte v)
+inline void put_byte(uint8_t v)
 {
   FM_OUTPUT_BIT(v,0b10000000);
   FM_OUTPUT_BIT(v,0b01000000);
@@ -69,6 +69,7 @@ inline void put_sector(uint8_t n, uint8_t s)
 {
   if (vzdsk->get_sector(n, s) != -1)
   {
+    //dump_sector(n,s);
     //In theory, this should speed up disk read a bit
     //Track has changed while reading sector from SD, skip playing back
     if (n != vtech1_track_x2/2)
@@ -76,8 +77,26 @@ inline void put_sector(uint8_t n, uint8_t s)
 
     for(int j=0; j < SECSIZE_VZ; j++)
     {
-      byte v = (byte *)fdc_sector[j];
-      put_byte(v);
+      put_byte(fdc_sector[j]);
+    }
+  }
+  else
+  {
+    serial_log(PSTR("Error reported for n:%d, s:%d\r\n"), n,s);
+  }
+}
+
+int counter = 0;
+inline void dump_sector(uint8_t n, uint8_t s) 
+{
+  if (n==0 && counter<=15) {
+    counter++;
+    serial_log(PSTR("\r\nTR:%d, SEC:%d"), n,s);
+    for(int i=0; i<SECSIZE_VZ; i++) {
+      if (i%16==0) {
+        serial_log(PSTR("\r\n"));
+      }      
+      serial_log(PSTR("%02X "), fdc_sector[i]);
     }
   }
 }

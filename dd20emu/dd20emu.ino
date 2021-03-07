@@ -32,8 +32,14 @@
  *        https://github.com/yuanb/mac-floppy-emu/tree/master/floppy_emu_arduino
  */
 
+//#define DD20EMU_SDFAT
+
 #include <SPI.h>
+#ifdef  DD20EMU_SDFAT
 #include "SdFat.h"
+#else
+#include <SD.h>
+#endif
 #include "PinChangeInterrupt.h"
 #include "dd20emu_acl.h"
 #include "vzdisk.h"
@@ -93,6 +99,7 @@ void setup() {
   vzdsk->Open(filename);
   vzdsk->set_track_padding();  
   vzdsk->build_sector_lut();
+  vzdsk->validate_sector_lut();
 
   attachInterrupt(digitalPinToInterrupt(wrReqPin), writeRequest, CHANGE);
   attachInterrupt(digitalPinToInterrupt(enDrvPin), driveEnabled, CHANGE);

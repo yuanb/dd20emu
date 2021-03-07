@@ -72,7 +72,7 @@ class vzdisk {
     vzdisk();
     int Open(char *filename);
     void set_track_padding();
-    int sync_gap1(uint8_t* buf, uint8_t* TR, uint8_t* SEC, int debug =0);
+    int sync_gap1(uint8_t* buf, uint8_t* TR, uint8_t* SEC);
     int build_sector_lut();
     int validate_sector_lut();
     int get_sector(uint8_t n, uint8_t s);    
@@ -82,8 +82,8 @@ class vzdisk {
 
   private:
     bool sdInitialized = false;
-#define  SDFAT    
-#ifdef  SDFAT    
+  
+#ifdef  DD20EMU_SDFAT
     SdFat SD;
 #endif
     File file;

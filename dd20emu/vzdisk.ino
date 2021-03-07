@@ -104,6 +104,31 @@ void vzdisk::set_track_padding()
   }  
 }
 
+int vzdisk::sync_gap1(uint8_t* buf, uint8_t* TR, uint8_t* SEC)
+{
+    int gap1_size = -1;
+
+    //Sync bytes
+    if (*buf++ == 0x80 && *buf++ == 0x80 && *buf++ == 0x80 && *buf++ == 0x80 && *buf++ == 0x80)
+    {
+        if (*buf == 0x80) {
+            buf++;
+            if (*buf++ == 0x00) {
+                gap1_size = 7;
+            }
+        } else if (*buf++ == 0x00) {
+            gap1_size = 6;
+        }
+        //IDAM
+        if (*buf++ == 0xFE && *buf++ == 0xE7 && *buf++ == 0x18 && *buf++ == 0xC3) {
+            *TR = *buf++;
+            *SEC = *buf;
+        }
+    }
+
+    return gap1_size;
+}
+
 int vzdisk::build_sector_lut()
 {
   uint8_t buf[13] = {0};
@@ -238,7 +263,7 @@ int vzdisk::validate_sector_lut()
             if (sync_gap1(buf, &TR, &SEC) ==-1)
             {
               serial_log(PSTR("check_gap1 on offset %04lX failed at [%d][%d]\r\n"), offset, i,j);
-              sync_gap1(buf, &TR, &SEC, 1);
+              sync_gap1(buf, &TR, &SEC);
               return result;
             }
 
