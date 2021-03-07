@@ -123,21 +123,6 @@ int vzdisk::build_sector_lut()
     file.seek(offset);
     file.read(buf,13);
 
-    /* 0x80 6 times, then 0x00 */
-    /**
-     * We should use : 
-     *    int delta = offset + 0 - expected_offset;
-     *      then
-     *    offset += (13 + 141);
-     * in case of 6 bytes 0x80, otherwise the lut table will also be '1' for every sector
-     * I belive there is a bug : I have to put
-     *    int delta = offset + 1 - expected_offset;
-     *      and
-     *    offset += (12 + 141);
-     *  
-     *  If the current sector has spec defined sync bytes, '0' is registered in the sec_lut, otherwise '1' is put in lut to mark a 
-     *  sector with short 5 bytes + 00h sync words
-     */
     gap1_size = lut->sync_gap1(buf, TR, SEC);
     if (gap1_size != -1)
     {
@@ -153,7 +138,7 @@ int vzdisk::build_sector_lut()
         sec_lut[TR][SEC_IDX/2] = sec_lut[TR][SEC_IDX/2] | value;
       }
       
-      //7 bytes GAP1, 4 bytes IDAM leading, 1 byte TR, 1 byte SEC
+      //n bytes GAP1, 4 bytes IDAM leading, 1 byte TR, 1 byte SEC
       //TODO: Correct value : change 0 to 1 for 7 bytes header
       offset += (gap1_size + 4 + 1 + (gap1_size==7 ? 0 : 1) + SEC_REMAINING);
       sectors++;
