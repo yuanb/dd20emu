@@ -36,15 +36,22 @@ int8_t sec_lut[TRK_NUM][SEC_NUM/2] = { 0 };
 
 #include "vzdisk.h"
 
-vzdisk::vzdisk()
+vzdisk::vzdisk(sector_lut* lut)
 {
   if (!SD.begin(SD_CS_PIN))
   {
     serial_log(PSTR("Failed to begin on SD"));
+    return;
   }
-  else {
-    sdInitialized = true;
-  }  
+
+  if (lut == NULL)
+  {
+    serial_log(PSTR("lut is NULL"));
+    return;
+  }
+
+  this->lut = lut;
+  sdInitialized = true;
 }
 
 int vzdisk::Open(char *fname)
@@ -66,7 +73,7 @@ int vzdisk::Open(char *fname)
     }
     else
     {
-      serial_log(PSTR("Can't find FLOPPY1.DSK"));
+      serial_log(PSTR("Can't find %s\r\n"), fname);
     }
   }
 
@@ -104,39 +111,13 @@ void vzdisk::set_track_padding()
   }  
 }
 
-int vzdisk::sync_gap1(uint8_t* buf, uint8_t* TR, uint8_t* SEC)
-{
-    int gap1_size = -1;
-
-    //Sync bytes
-    if (*buf++ == 0x80 && *buf++ == 0x80 && *buf++ == 0x80 && *buf++ == 0x80 && *buf++ == 0x80)
-    {
-        if (*buf == 0x80) {
-            buf++;
-            if (*buf++ == 0x00) {
-                gap1_size = 7;
-            }
-        } else if (*buf++ == 0x00) {
-            gap1_size = 6;
-        }
-        //IDAM
-        if (*buf++ == 0xFE && *buf++ == 0xE7 && *buf++ == 0x18 && *buf++ == 0xC3) {
-            *TR = *buf++;
-            *SEC = *buf;
-        }
-    }
-
-    return gap1_size;
-}
-
 int vzdisk::build_sector_lut()
 {
-  uint8_t buf[13] = {0};
-  uint8_t n[1] = {0};
+  uint8_t buf[13] = {0}, TR, SEC;
   unsigned long offset = 0;
   uint16_t sectors = 0;
   uint16_t elapsed = 0;
-  int8_t oldTR = -1;
+  int8_t gap1_size = -1;
 
   serial_log(PSTR("Start building sector LUT.\r\n"));
   elapsed = millis();
@@ -160,69 +141,32 @@ int vzdisk::build_sector_lut()
      *  If the current sector has spec defined sync bytes, '0' is registered in the sec_lut, otherwise '1' is put in lut to mark a 
      *  sector with short 5 bytes + 00h sync words
      */
-    if (buf[0] == 0x80 && buf[1] == 0x80 && buf[2] == 0x80 && buf[3] == 0x80 && buf[4] == 0x80 && buf[5] == 0x80 &&
-        buf[6] == 0x00 && buf[7] == 0xFE && buf[8] == 0xE7 && buf[9] == 0x18 && buf[10]== 0xC3)
+    gap1_size = lut->sync_gap1(buf, TR, SEC);
+    if (gap1_size != -1)
     {
-      uint8_t TR = buf[11];
-      uint8_t SEC= pgm_read_byte_near(&inversed_sec_interleave[buf[12]]);
-      
-      unsigned long expected_offset = (unsigned long)TR*(SEC_NUM*sizeof(sector_t)+padding) + (unsigned long)SEC*sizeof(sector_t);
+      uint8_t SEC_IDX= pgm_read_byte_near(&inversed_sec_interleave[SEC]);
+      unsigned long expected_offset = (unsigned long)TR*(SEC_NUM*sizeof(sector_t)+padding) + (unsigned long)SEC_IDX*sizeof(sector_t);
       //TODO: Correct value : change 1 to 0 for 7 bytes header
-      int delta = offset + 1 - expected_offset;
-      uint8_t value = delta - TR*16 - SEC;
-      if (SEC%2==0) {
+      int delta = offset + (gap1_size==7? 1 : 0) - expected_offset;
+      uint8_t value = delta - TR*16 - SEC_IDX;     
+
+      if (SEC_IDX%2==0) {
         //high half
-        sec_lut[TR][SEC/2] = value << 4;
+        sec_lut[TR][SEC_IDX/2] = value << 4;
       } else {
         //low half
-        sec_lut[TR][SEC/2] = sec_lut[TR][SEC/2] | value;
+        sec_lut[TR][SEC_IDX/2] = sec_lut[TR][SEC_IDX/2] | value;
       }
-
-      if (oldTR!=TR) {
-        oldTR = TR;
-      }
-
+      
       //7 bytes GAP1, 4 bytes IDAM leading, 1 byte TR, 1 byte SEC
       //TODO: Correct value : change 0 to 1 for 7 bytes header
-      offset += (7 + 4 + 1 + 0 + SEC_REMAINING);
+      offset += (gap1_size + 4 + 1 + (gap1_size==7 ? 0 : 1) + SEC_REMAINING);
       sectors++;
       
       //if this is the last sector of  
-      if (buf[12] == 0x05 && padding!=0) {
-        offset += 15; //+15 or 16
-      }
-    }
-    /* 0x80 5 times, then 0x00 */
-    else if (buf[0] == 0x80 && buf[1] == 0x80 && buf[2] == 0x80 && buf[3] == 0x80 && buf[4] == 0x80 && buf[5] == 0x00 &&
-        buf[6] == 0xFE && buf[7] == 0xE7 && buf[8] == 0x18 && buf[9] == 0xC3)
-    {
-      uint8_t TR = buf[10];
-      uint8_t SEC = pgm_read_byte_near(&inversed_sec_interleave[buf[11]]);
-      
-      unsigned long expected_offset = (unsigned long)TR*(SEC_NUM*sizeof(sector_t)+padding) + (unsigned long)SEC*sizeof(sector_t);
-      int delta = offset - expected_offset;
-      uint8_t value = delta - TR*16 - SEC;   
-      if (SEC%2==0) {
-        //high half
-        sec_lut[TR][SEC/2] = value << 4;
-      } else {
-        //low half      
-        sec_lut[TR][SEC/2] = sec_lut[TR][SEC/2] | value;   
-      }    
-      
-      if (oldTR!=TR) {
-        oldTR = TR;
-      }
-
-      //Exceptional sector size: 153   
-      //6 bytes GAP1, 4 bytes IDAM leading, 1 byte TR, 1 byte SEC   
-      offset += (6 + 4 + 1 + 1 + SEC_REMAINING);
-      sectors++;
-       
-      //if this is the last sector of  
-      if (buf[11] == 0x05 && padding!=0) {
-        offset += 15;
-      }
+      if (SEC_IDX==15) {
+        offset += padding;
+      }      
     }
     else {
       offset++;
@@ -259,11 +203,9 @@ int vzdisk::validate_sector_lut()
             file.seek(offset);
             file.read(buf, sizeof(buf));
 
-            int gap1_size = sync_gap1(buf, &TR, &SEC);
-            if (sync_gap1(buf, &TR, &SEC) ==-1)
+            if (lut->sync_gap1(buf, TR, SEC) == -1)
             {
               serial_log(PSTR("check_gap1 on offset %04lX failed at [%d][%d]\r\n"), offset, i,j);
-              sync_gap1(buf, &TR, &SEC);
               return result;
             }
 

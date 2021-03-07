@@ -60,11 +60,11 @@
 //Penguin wont load, D1B and VZCAVE wont run. The rest are ok
 //char filename[] = "FLOPPY1.DSK";
 
-char filename[] ="FLOPPY2.DSK";
+//char filename[] ="FLOPPY2.DSK";
 
 //Disk image format 2 (formatted from vzemu), fsize = 99185
 //TODO : "GHOST2" Disk I/O Error, Invalid IDAM on TR 39
-//char filename[] = "HELLO.DSK";
+char filename[] = "HELLO.DSK";
 
 //Disk image format 2(created from empty file from vzemu)
 //char filename[] = "20201016.DSK";
@@ -73,6 +73,7 @@ char filename[] ="FLOPPY2.DSK";
 //char filename[] ="extbasic.dsk";
 
 vzdisk *vzdsk = NULL;
+sector_lut *lut = NULL;
   
 void setup() {
   Serial.begin(9600);
@@ -95,7 +96,8 @@ void setup() {
   pinMode(stepPin2, INPUT_PULLUP);
   pinMode(stepPin3, INPUT_PULLUP);
 
-  vzdsk = new vzdisk();
+  lut = new sector_lut();
+  vzdsk = new vzdisk(lut);
   vzdsk->Open(filename);
   vzdsk->set_track_padding();  
   vzdsk->build_sector_lut();

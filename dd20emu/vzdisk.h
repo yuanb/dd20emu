@@ -18,6 +18,7 @@
 
 #ifndef  _VZDISK_H_
 #define _VZDISK_H_
+#include "sector_lut.h"
 
 //These numbers are spec numbers
 
@@ -69,10 +70,9 @@ typedef struct Track {
 
 class vzdisk {
   public:
-    vzdisk();
+    vzdisk(sector_lut* lut);
     int Open(char *filename);
     void set_track_padding();
-    int sync_gap1(uint8_t* buf, uint8_t* TR, uint8_t* SEC);
     int build_sector_lut();
     int validate_sector_lut();
     int get_sector(uint8_t n, uint8_t s);    
@@ -89,6 +89,7 @@ class vzdisk {
     File file;
     uint8_t padding = 0; 
     char* filename;
+    sector_lut *lut;
 };
 
 #endif  //_VZDISK_H_
