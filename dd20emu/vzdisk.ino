@@ -142,10 +142,8 @@ int vzdisk::build_sector_lut()
     if (gap1_size != -1)
     {
       uint8_t SEC_IDX= pgm_read_byte_near(&inversed_sec_interleave[SEC]);
-      unsigned long expected_offset = (unsigned long)TR*(SEC_NUM*sizeof(sector_t)+padding) + (unsigned long)SEC_IDX*sizeof(sector_t);
       //TODO: Correct value : change 1 to 0 for 7 bytes header
-      int delta = offset + (gap1_size==7? 1 : 0) - expected_offset;
-      uint8_t value = delta - TR*16 - SEC_IDX;     
+      uint8_t value = offset + (gap1_size==7? 1 : 0) - TR*(TRKSIZE_VZ+padding) - SEC_IDX*SECSIZE_VZ;;     
 
       if (SEC_IDX%2==0) {
         //high half
@@ -161,7 +159,7 @@ int vzdisk::build_sector_lut()
       sectors++;
       
       //if this is the last sector of  
-      if (SEC_IDX==15) {
+      if (SEC_IDX==SEC_NUM-1) {
         offset += padding;
       }      
     }

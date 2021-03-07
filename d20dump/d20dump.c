@@ -21,7 +21,7 @@ const uint8_t sector_interleave[SEC_NUM] = { 0, 11, 6, 1, 12, 7, 2, 13, 8, 3, 14
 // stored in sec_lut[TRK][14]
 // Thus during play back, in the for loop of [0, 15], sectors will be played back at the correct interleaved 
 // order of 0, 11, 6, 1, 12, 7, 2
-const uint8_t reversed_index_sec_interleave[SEC_NUM] = {0, 3, 6, 9, 12, 15, 2, 5, 8, 11, 14, 1, 4, 7, 10, 13};
+const uint8_t inversed_sec_interleave[SEC_NUM] = {0, 3, 6, 9, 12, 15, 2, 5, 8, 11, 14, 1, 4, 7, 10, 13};
 
 /*40 tracks, 8 bytes/track packed*/
 uint8_t sec_lut[TRK_NUM][SEC_NUM] = { 0 };
@@ -123,7 +123,7 @@ int build_sector_lut(FILE *fp, long int fsize)
         //     return -1;
         int gap1_size = sync_gap1(buf, &TR, &SEC);
         if (gap1_size != -1) {
-            uint8_t SEC_IDX = reversed_index_sec_interleave[SEC];
+            uint8_t SEC_IDX = inversed_sec_interleave[SEC];
             sec_lut[TR][SEC_IDX] = offset - TR*(TRKSIZE_VZ+padding) - SEC_IDX*SECSIZE_VZ;
             printf("TR:%d, SEC_IDX:%d, value:%d\r\n", TR, SEC_IDX, sec_lut[TR][SEC_IDX]);
 
