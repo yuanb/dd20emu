@@ -224,31 +224,22 @@ int vzdisk::validate_sector_lut()
 int vzdisk::get_sector(uint8_t n, uint8_t s)
 {
   int result = -1;
-  if (n<TRK_NUM && s<SEC_NUM)
-  {  
-    unsigned long expected_offset = (unsigned long)n*(SEC_NUM*sizeof(sector_t)+padding) + (unsigned long)s*sizeof(sector_t);
-    uint8_t value = s%2==0 ? (sec_lut[n][s] >>4) : (sec_lut[n][s] & 0x0F);
+  uint8_t value = s%2==0 ? (sec_lut[n][s] >>4) : (sec_lut[n][s] & 0x0F);
+  uint32_t calculated_offset = value + (uint32_t)n*(TRKSIZE_VZ+padding) + (uint32_t)s*SECSIZE_VZ;
 
-    //Adjust offset!!!!!!!!!!!!!!
-    unsigned long calculated_offset = expected_offset + (value + n*16 + s);
-
-    if (file.seek(calculated_offset) != false && (result= file.read(fdc_sector, SECSIZE_VZ)) != -1)
-    { 
-      uint8_t TR, SEC;
-      int gap1_size = lut->sync_gap1(fdc_sector, TR, SEC);
-      if (gap1_size != -1 && TR == n && pgm_read_byte_near(&sector_interleave[s])==SEC) {
-        return result;
-      }
-      else {
-        serial_log(PSTR("Validate sector header error on TR:%d, SEC:%d\r\n"), n,s);
-      }
+  if (file.seek(calculated_offset) != false && (result= file.read(fdc_sector, SECSIZE_VZ)) != -1)
+  { 
+    uint8_t TR, SEC;
+    int gap1_size = lut->sync_gap1(fdc_sector, TR, SEC);
+    if (gap1_size != -1 && TR == n && pgm_read_byte_near(&sector_interleave[s])==SEC) {
+      return result;
     }
     else {
-      serial_log(PSTR("Failed to seek/read to T:%d, S%d\r\n"), n, s);
+      serial_log(PSTR("Validate sector header error on TR:%d, SEC:%d\r\n"), n,s);
     }
   }
   else {
-      serial_log(PSTR("Invalid sector T:%d, S%d requested\r\n"), n, s);
+    serial_log(PSTR("Failed to seek/read to T:%d, S%d\r\n"), n, s);
   }
 
   return result;
