@@ -129,19 +129,23 @@ int vzdisk::build_sector_lut()
     if (gap1_size != -1)
     {
       uint8_t SEC_IDX= pgm_read_byte_near(&inversed_sec_interleave[SEC]);
-      //TODO: Correct value : change 1 to 0 for 7 bytes header
-      uint8_t value = offset + (gap1_size==7? 1 : 0) - TR*(TRKSIZE_VZ+padding) - SEC_IDX*SECSIZE_VZ;;     
+      //TODO: Correct valvalueue : change 1 to 0 for 7 bytes header
+      //1 : adjust 7 bytes GAP1 to 6 bytes for lut value
+      //0 : keep 7 bytes spec GAP1
+      uint8_t lut = offset + (gap1_size==7? 1 : 0) - TR*(TRKSIZE_VZ+padding) - SEC_IDX*SECSIZE_VZ;;     
 
       if (SEC_IDX%2==0) {
         //high half
-        sec_lut[TR][SEC_IDX/2] = value << 4;
+        sec_lut[TR][SEC_IDX/2] = lut << 4;
       } else {
         //low half
-        sec_lut[TR][SEC_IDX/2] = sec_lut[TR][SEC_IDX/2] | value;
+        sec_lut[TR][SEC_IDX/2] = sec_lut[TR][SEC_IDX/2] | lut;
       }
       
       //n bytes GAP1, 4 bytes IDAM leading, 1 byte TR, 1 byte SEC
       //TODO: Correct value : change 0 to 1 for 7 bytes header
+      //1 : use adjusted GAP1(6 bytes), slide sector by 1 bytes
+      //0 : use spec GAP1, no adjustment for offset
       offset += (gap1_size + 4 + 1 + (gap1_size==7 ? 0 : 1) + SEC_REMAINING);
       sectors++;
       
