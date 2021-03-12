@@ -20,7 +20,9 @@ Todo list:
 2021-02/21  
 Ported to Arduino Uno, latest code merged to develop branch.  
 Used packed nibbles to store sec_lut value. 40x8 = 320 bytes.  
-[![Arduino Uno DD20 Schematic](https://github.com/yuanb/dd20emu/blob/master/dd20emu/schematic/Arduino%20Uno%20DD20Emu.jpg)](https://github.com/yuanb/dd20emu/blob/master/dd20emu/schematic/Arduino%20Uno%20DD20Emu.jpg)
+[![Arduino Uno DD20 Schematic](https://github.com/yuanb/dd20emu/blob/master/dd20emu/schematic/Arduino%20Uno%20DD20Emu.jpg)](https://github.com/yuanb/dd20emu/blob/master/dd20emu/schematic/Arduino%20Uno%20DD20Emu.jpg)  
+
+[![Arduino Mega2560 Schematic](https://github.com/yuanb/dd20emu/raw/master/schematic/Arduino%20Mega2560%20DD20Emu.jpg)](https://github.com/yuanb/dd20emu/raw/master/schematic/Arduino%20Mega2560%20DD20Emu.jpg)
 
 2021-02/15  
 Default branch: develop  
