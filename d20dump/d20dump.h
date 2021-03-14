@@ -10,18 +10,8 @@
 #define PADDING_SIZE    16
 //define    TRKSIZE_VZ_PADDED   TRKSIZE_VZ + 16
 
-//Since a lot of the sectors in various formats of VZ disk images have short sync bytes ( 5x80h, 00h ), the normalized sector header is
-//defined as short sync bytes
-
 typedef struct SectorHeader {
-    /* Normalized means if the GAP1 is 7 bytes, the first byte is skipped, only 6 bytes are sent to the output */
-#ifdef  NORMALIZED_SECTOR_HDR
-    //some disk images have 6 byets GAP1
-    uint8_t     GAP1[6];        //0x80 5 times, then 0x00
-#else
-    /* spec GAP1 */
     uint8_t     GAP1[7];        //0x80 6 times, then 0x00
-#endif
     uint8_t     IDAM_leading[4];//FE, E7, 18, C3
     uint8_t     TR;
     uint8_t     SC;
@@ -30,7 +20,8 @@ typedef struct SectorHeader {
     uint8_t     IDAM_closing[4];//C3, 18, E7, FE
 } sec_hdr_t;
 
-#define LUT_SCAN_STEP   sizeof((sec_hdr_t*)0)->GAP1 + sizeof((sec_hdr_t*)0)->IDAM_leading + sizeof((sec_hdr_t*)0)->TR + sizeof((sec_hdr_t*)0)->SC
+//#define LUT_SCAN_STEP   sizeof((sec_hdr_t*)0)->GAP1 + sizeof((sec_hdr_t*)0)->IDAM_leading + sizeof((sec_hdr_t*)0)->TR + sizeof((sec_hdr_t*)0)->SC
+#define LUT_SCAN_STEP   sizeof(sec_hdr_t)
 
 //defines the remaining # of bytes after SC field in sector header
 #define SEC_HDR_REMAINING   sizeof((sec_hdr_t*)0)->TS_sum + sizeof((sec_hdr_t*)0)->GAP2 + sizeof((sec_hdr_t*)0)->IDAM_closing
