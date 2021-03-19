@@ -23,7 +23,7 @@
  * Type 3. file size is 99200 bytes
 **/
 
-uint8_t fdc_sector[SECSIZE_VZ];
+uint8_t fdc_sector[155/*SECSIZE_VZ*/];
 
 //used in get_sector()
 const uint8_t sector_interleave[SEC_NUM] PROGMEM = { 0, 11, 6, 1, 12, 7, 2, 13, 8, 3, 14, 9, 4, 15, 10, 5 };
@@ -132,13 +132,13 @@ int vzdisk::build_sector_lut()
       //TODO: Correct valvalueue : change 1 to 0 for 7 bytes header
       //1 : adjust 7 bytes GAP1 to 6 bytes for lut value
       //0 : keep 7 bytes spec GAP1
-      uint8_t lut = offset + (gap1_size==7? 1 : 0) - TR*(TRKSIZE_VZ+padding) - SEC_IDX*SECSIZE_VZ;;     
+      uint8_t lut = offset + /*(gap1_size==7? 1 : 0)*/0 - TR*(TRKSIZE_VZ+padding) - SEC_IDX*SECSIZE_VZ;;     
 
       if (SEC_IDX%2==0) {
-        //high half
+        //high nibble
         sec_lut[TR][SEC_IDX/2] = lut << 4;
       } else {
-        //low half
+        //low nibble
         sec_lut[TR][SEC_IDX/2] = sec_lut[TR][SEC_IDX/2] | lut;
       }
       
@@ -146,7 +146,7 @@ int vzdisk::build_sector_lut()
       //TODO: Correct value : change 0 to 1 for 7 bytes header
       //1 : use adjusted GAP1(6 bytes), slide sector by 1 bytes
       //0 : use spec GAP1, no adjustment for offset
-      offset += (gap1_size + 4 + 1 + (gap1_size==7 ? 0 : 1) + SEC_REMAINING);
+      offset += (gap1_size + 4 + 1 + /*(gap1_size==7 ? 0 : 1)*/1 + SEC_REMAINING);
       sectors++;
       
       //if this is the last sector of  
@@ -185,7 +185,8 @@ int vzdisk::validate_sector_lut()
     {
         for(int j=0; j<SEC_NUM; j++)
         {
-            uint32_t offset = sec_lut[i][j] + (uint32_t)i*(TRKSIZE_VZ+padding) + (uint32_t)j*SECSIZE_VZ;
+            uint8_t value = j%2==0 ? (sec_lut[i][j/2] >>4) : (sec_lut[i][j/2] & 0x0F);
+            uint32_t offset = value + (uint32_t)i*(TRKSIZE_VZ+padding) + (uint32_t)j*SECSIZE_VZ;
             file.seek(offset);
             file.read(buf, sizeof(buf));
 
@@ -208,30 +209,174 @@ int vzdisk::validate_sector_lut()
     return result;
 }
 
+/*
+ * n : Requested Track number
+ * s : Requested Sector(inidex) number
+ */
+int vzdisk::get_lut(uint8_t n, uint8_t s)
+{
+  return s%2==0 ? (sec_lut[n][s/2] >>4) : (sec_lut[n][s/2] & 0x0F); 
+}
+
+uint32_t vzdisk::get_offset(int lut, uint8_t n, uint8_t s)
+{
+  return lut + (uint32_t)n*(TRKSIZE_VZ+padding) + (uint32_t)s*SECSIZE_VZ;
+}
+
+/*
+ * n : Requested Track number
+ * s : Requested Sector(inidex) number
+ */
+uint32_t vzdisk::get_next_sector_offset(uint8_t n, uint8_t s)
+{
+  uint32_t result = 0;
+
+  int next_tr, next_sec;
+  if (s != 15)
+  {
+    next_tr = n;
+    next_sec = s+1;
+  }
+  else
+  {
+    next_sec = 0;    
+    if (n != 39)
+    {
+      next_tr = n+1;
+    }
+    else
+    {
+      //n==39, s==15, this is the last sector of last track;
+      next_tr = -1;
+    }
+  }
+
+  if (next_tr != -1)
+  {
+    int value = get_lut(next_tr, next_sec);
+    result = get_offset(value, next_tr, next_sec);
+    if (s == 15)
+    {
+      //HACK : hello.dsk, tr:3, sec:15 has 154 bytes, the padding has 15 bytes, this will fix the hello.dsk/ghost2' loading problem
+      //There need some fix to detect and adjust
+      //With this hack, this files still have problem
+      //FLOPPY2.dsk 'LUNAR' 
+      //FLOPPY1.dsk 'PENGUIN'
+
+      //This problem mean, at current stage, the sector adjustment, lut are good, just occasionally, there are some sector are cut 
+      //off at the end by 1 or 2 bytes.
+      result -= (padding-1);
+    }
+    //serial_log(PSTR("\r\n\r\nnext_tr=%d, next_sec=%d, TR:%d, SEC:%d, next_offset=%04lX, result=%04lX"), next_tr, next_sec, n, s, 
+    //            get_offset(value, next_tr, next_sec), result);    
+  }
+
+  return result;
+}
+
+/*
+if lut value is 0, the sector size could be 154 or 155
+    155 : TR0 to TR6 are used in hello1.dsk, SEC#0 of 0~6 track of hello1.dsk, 
+            this is caused by 7 bytes(80 80 80 80 80 80 00) GAP1 and 7 bytes(80 80 80 80 80 80 00) of GAP2 leading
+        CORRECT GAP1, WRONG GAP2(+1)
+        
+    154 : Each un-used sector which lut is 0, the GAP1 is always 7 bytes(80 80 80 80 80 80 00), GAP2 leading is 
+            always 6 bytes(80 80 80 80 80 00)
+        CORRECT GAP1, CORRECT GAP2
+
+Algorithm : Output everything; report actual size
+    use read buffer size 155, 
+    read [current_offset, next_offset),
+    return next_offset-current_offset to get_sector() caller
+
+if lut value is 1, the sector size could be 154 or 153
+    154 : TR:39, SEC#1 of hello,dsk(starting 0x17B9F) is a 154 bytes sector.
+            this is caused by 6 bytes(80 80 80 80 80 00) of GAP1, 7 bytes(80 80 80 80 80 80 00) of GAP2 leading.
+        WRONG GAP1(-1), WRONG GAP2(+1)
+
+    153 : TR:39, SEC#11 of hello.dsk(starting 0x17A6B) is a 153 bytes sector. 
+            6 bytes(80 80 80 80 80 00) of GAP1, 6 bytes(80 80 80 80 80 00) of GAP2 leading.
+        WRONG GAP1(-1), CORRECT GAP2
+
+Algorithm : add 0x80 to the front, report actual size + 1
+    use read buffer size 155
+    *buf_ptr++ = 0x80;
+    read [current_offset, next_offset) to buf_ptr,
+    return next_offset-current_offset+1 to get_sector() caller
+
+*/
 /**
  * n : Requested Track number
- * s : Requested Sector number
+ * s : Requested Sector(inidex) number
  */
 int vzdisk::get_sector(uint8_t n, uint8_t s)
 {
   int result = -1;
-  uint8_t value = s%2==0 ? (sec_lut[n][s] >>4) : (sec_lut[n][s] & 0x0F);
-  uint32_t calculated_offset = value + (uint32_t)n*(TRKSIZE_VZ+padding) + (uint32_t)s*SECSIZE_VZ;
+  int value = get_lut(n,s);  
+  uint32_t offset = get_offset(value, n,s);
 
-  if (file.seek(calculated_offset) != false && (result= file.read(fdc_sector, SECSIZE_VZ)) != -1)
-  { 
-    uint8_t TR, SEC;
-    int gap1_size = lut->sync_gap1(fdc_sector, TR, SEC);
-    if (gap1_size != -1 && TR == n && pgm_read_byte_near(&sector_interleave[s])==SEC) {
-      return result;
+  //serial_log(PSTR("\r\nn=%d, s=%d, sec_lut[n][s/2]=%02X, value=%d, offset=%04lX"), n,s, sec_lut[n][s/2], value, offset);
+  if (file.seek(offset) == false)
+  {
+    serial_log(PSTR("Failed on seek to TR:%d, SEC:%d\r\n"), n,s);
+    return result;
+  }
+
+  int read_size = SECSIZE_VZ;
+
+  if (value == 0)
+  {
+      //value == 0, the read_size could either be 155 or 154
+      uint32_t next_offset = get_next_sector_offset(n,s);
+      if (next_offset != 0) {
+        read_size = (next_offset - offset);
+      }
+      else {
+        //Note: get_next_sector_offset returned 0, the (n,s) is TR:39, SEC:15
+        read_size = file.size() - offset;
+      }
+      
+      assert(read_size == 155 || read_size == 154);
+      file.read(fdc_sector, read_size);
+      result = read_size;
+      //serial_log(PSTR("\r\n'0' -> n:%d, s:%d, offset=%04lX, result=%d\r\n"), n, s, offset, result);      
+  }
+  else
+  {
+    //value ==1, the read_size could either be 154 or 153
+    fdc_sector[0] = 0x80;
+    
+    uint32_t next_offset = get_next_sector_offset(n,s);
+    if (next_offset != 0) {
+      read_size = (next_offset - offset);
     }
     else {
-      serial_log(PSTR("Validate sector header error on TR:%d, SEC:%d\r\n"), n,s);
+      //Note: get_next_sector_offset returned 0, the (n,s) is TR:39, SEC:15
+      read_size = file.size() - offset;
     }
+
+    assert(read_size == 154 || read_size == 153);
+    file.read(fdc_sector, read_size);
+    //result = read_size+1;
+    result = read_size;
+    //serial_log(PSTR("\r\n'1' -> n:%d, s:%d, offset=%04lX, result=%d\r\n"),n, s, offset, result);    
   }
-  else {
-    serial_log(PSTR("Failed to seek/read to T:%d, S%d\r\n"), n, s);
-  }
+  
+//  if (result != -1)
+//  { 
+//    uint8_t TR, SEC;
+//    int gap1_size = lut->sync_gap1(fdc_sector, TR, SEC);
+//    if (gap1_size != -1 && TR == n && pgm_read_byte_near(&sector_interleave[s])==SEC) {
+//      return result;
+//    }
+//    else {
+//      result = -1;
+//      serial_log(PSTR("Validate sector header error on TR:%d, SEC:%d\r\n"), n,s);
+//    }
+//  }
+//  else {
+//    serial_log(PSTR("Failed to seek/read to T:%d, S%d\r\n"), n, s);
+//  }
 
   return result;
 }

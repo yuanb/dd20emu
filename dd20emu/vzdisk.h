@@ -29,7 +29,7 @@
 #define PADDING_SIZE    16
 //define    TRKSIZE_VZ_PADDED   TRKSIZE_VZ + 16
 
-#define  NORMALIZED_SECTOR_HDR   1
+//#define  NORMALIZED_SECTOR_HDR   1
   
 typedef struct SectorHeader {
 
@@ -75,10 +75,13 @@ class vzdisk {
     void set_track_padding();
     int build_sector_lut();
     int validate_sector_lut();
+
     int get_sector(uint8_t n, uint8_t s);    
 
   protected:
-    int get_track(int n);
+    int get_lut(uint8_t n, uint8_t s);
+    uint32_t get_offset(int lut, uint8_t n, uint8_t s);
+    uint32_t get_next_sector_offset(uint8_t n, uint8_t s);
 
   private:
     bool sdInitialized = false;

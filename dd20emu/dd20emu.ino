@@ -33,6 +33,9 @@
  */
 
 //#define DD20EMU_SDFAT
+#define __ASSERT_USE_STDERR
+
+#include <assert.h>
 
 #include <SPI.h>
 #ifdef  DD20EMU_SDFAT
@@ -55,6 +58,10 @@
 /*****************/
 /*  SD FILE      */
 /*****************/
+//No files
+//char filename[] = "EMPTY.DSK";
+char filename[] = "HELLO1.DSK";
+
 
 //Disk image format 1, FLOPPY1.DSK and FLOPPY2.DSK
 //Penguin wont load, D1B and VZCAVE wont run. The rest are ok
@@ -64,10 +71,10 @@
 
 //Disk image format 2 (formatted from vzemu), fsize = 99185
 //TODO : "GHOST2" Disk I/O Error, Invalid IDAM on TR 39
-char filename[] = "HELLO.DSK";
-//char filename[] = "HELLO1.DSK";
+//char filename[] = "HELLO.DSK";
 
 //Disk image format 2(created from empty file from vzemu)
+//No files
 //char filename[] = "20201016.DSK";
 
 //Disk image format 2?

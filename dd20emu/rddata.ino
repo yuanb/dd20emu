@@ -63,19 +63,20 @@ void handle_wr() {
   }
 }
 
-extern uint8_t fdc_sector[SECSIZE_VZ];
+extern uint8_t fdc_sector[155/*SECSIZE_VZ*/];
 extern vzdisk* vzdsk;
 inline void put_sector(uint8_t n, uint8_t s)
 {
-  if (vzdsk->get_sector(n, s) != -1)
+  int playback_size = vzdsk->get_sector(n, s);
+  if (playback_size != -1)
   {
-    //dump_sector(n,s);
+    //dump_sector(n,s, playback_size);
     //In theory, this should speed up disk read a bit
     //Track has changed while reading sector from SD, skip playing back
     if (n != vtech1_track_x2/2)
       return;
 
-    for(int j=0; j < SECSIZE_VZ; j++)
+    for(int j=0; j < playback_size; j++)
     {
       put_byte(fdc_sector[j]);
     }
@@ -86,17 +87,17 @@ inline void put_sector(uint8_t n, uint8_t s)
   }
 }
 
-int counter = 0;
-inline void dump_sector(uint8_t n, uint8_t s) 
+//int counter = 0;
+inline void dump_sector(uint8_t n, uint8_t s, int playback_size) 
 {
-  if (n==0 && counter<=15) {
-    counter++;
-    serial_log(PSTR("\r\nTR:%d, SEC:%d"), n,s);
-    for(int i=0; i<SECSIZE_VZ; i++) {
+  //if (n==0 && counter<=15) {
+  //  counter++;
+    serial_log(PSTR("TR:%d, SEC_IDX:%d"), n,s);
+    for(int i=0; i<playback_size; i++) {
       if (i%16==0) {
         serial_log(PSTR("\r\n"));
       }      
       serial_log(PSTR("%02X "), fdc_sector[i]);
     }
-  }
+  //}
 }
