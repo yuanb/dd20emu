@@ -20,9 +20,9 @@ Todo list:
 2021-02/21  
 Ported to Arduino Uno, latest code merged to develop branch.  
 Used packed nibbles to store sec_lut value. 40x8 = 320 bytes.  
-[![Arduino Uno DD20 Schematic](https://github.com/yuanb/dd20emu/blob/master/dd20emu/schematic/Arduino%20Uno%20DD20Emu.jpg)](https://github.com/yuanb/dd20emu/blob/master/dd20emu/schematic/Arduino%20Uno%20DD20Emu.jpg)  
+[![Arduino Uno DD20 Schematic](schematic/Arduino%20Uno%20DD20Emu.jpg)](schematic/Arduino%20Uno%20DD20Emu.jpg)  
 
-[![Arduino Mega2560 Schematic](https://github.com/yuanb/dd20emu/raw/master/schematic/Arduino%20Mega2560%20DD20Emu.jpg)](https://github.com/yuanb/dd20emu/raw/master/schematic/Arduino%20Mega2560%20DD20Emu.jpg)
+[![Arduino Mega2560 Schematic](schematic/Arduino%20Mega2560%20DD20Emu.jpg)](schematic/Arduino%20Mega2560%20DD20Emu.jpg)
 
 2021-02/15  
 Default branch: develop  
@@ -38,17 +38,17 @@ First file loadded from Arduino DD20 emu.
 
 2020-09-27  
 First time track#0 is emulated.  
-[![DD20emu](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/dd20emu_di_40.jpg)](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/dd20emu_di_40.jpg)
+[![DD20emu](site/images/dd20emu_di_40.jpg)](site/images/dd20emu_di_40.jpg)
 
 2020-09-20  
-[![DI-40 Reborn](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/DI-40reborn.jpg)](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/DI-40reborn.jpg)
+[![DI-40 Reborn](site/images/DI-40reborn.jpg)](site/images/DI-40reborn.jpg)
 
 2020-07-19  
 This picture shows the RDData input is sent to 74LS164 A pin, and the D0 on port 11 read(FM Decoding). To get a byte, DI-40 needs to read from port 11 eight times.
-[![FM Decoding](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/RDData%20to%20D0%20on%20port%2011%20read.png)](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/RDData%20to%20D0%20on%20port%2011%20read.png)
+[![FM Decoding](site/images/RDData%20to%20D0%20on%20port%2011%20read.png)](site/images/RDData%20to%20D0%20on%20port%2011%20read.png)
 
 This picture shows the how Y1(Port11) reads generates D CLR(Port 12) pulse, 74LS164 CLK pulse and Port 12 polling.
-[![D Flip-flop on port 12;74ls164 CLK and polling](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/Port%2011_12%20RDData%20pulse.png)](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/Port%2011_12%20RDData%20pulse.png)
+[![D Flip-flop on port 12;74ls164 CLK and polling](site/images/Port%2011_12%20RDData%20pulse.png)](site/images/Port%2011_12%20RDData%20pulse.png)
 
 2019-02-10
 
@@ -87,7 +87,7 @@ The 8 pin DIN socket on my Laser310 is actually RGB with composite Video output 
 
 With some patience, I manually decoded the Laser310 tape recording header in Audacity. Click on the images to see full pictures.Bit pulses are 1: three low/short pulses, 0: one low/short and one cycle of high/long pulses.<br />
 Laser200/Laser310's cassette port operates at 600 bps Baud rate. This is a snapshot of the cassette waveforms found in VZ300 technical manual<br />
-[![Laser 310 cassette waveforms](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/cassette_waveforms.png)](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/cassette_waveforms.png)
+[![Laser 310 cassette waveforms](site/images/cassette_waveforms.png)](site/images/cassette_waveforms.png)
 The chart above shows: 1.66ms/bit, which is 1000ms/1.66ms = 602.41bps. 0.277us/pulse, 50/50 duty cycle.<br />
 
 It seems the Laser310 cassette program recording header is :<br />
@@ -98,7 +98,7 @@ It seems the Laser310 cassette program recording header is :<br />
 0x00 - End of header, there is an extra *pause* after this byte<br /> 
 0x7AE9 - Start Address, LSB first, MSB later<br />
 ......<br />
-[![Manual decoded Laser310 game recording header](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/bust_out_header.png)](https://raw.githubusercontent.com/yuanb/dd20emu/master/site/images/bust_out_header.png)
+[![Manual decoded Laser310 game recording header](site/images/bust_out_header.png)](site/images/bust_out_header.png)
 
 Here is a [ASCII Chart](http://www.bluesock.org/~willg/dev/ascii.html)
 
