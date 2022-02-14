@@ -18,6 +18,11 @@ Todo list:
 * I have about 2.25 hours length of Laser 310 data tape. They are Demo, Utilities, Games, Basic program I wrote etc. I would like to convert them to vz files. Giving they are 30 years old, the recorder I used back then was not a standard data recorder, there is only a little hope. [This link](http://www.pagetable.com/?p=32) describes how data tape encoding works on Apple I.
 
 ## Updates
+2022-02-14
+Known issues:
+* The emualtor is not stable when connected with DD20 floppy drive on the second port.
+* Write is not supported yet.
+
 2021-02/21  
 Ported to Arduino Uno, latest code merged to develop branch.  
 Used packed nibbles to store sec_lut value. 40x8 = 320 bytes.  
