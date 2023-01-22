@@ -40,9 +40,10 @@
 /*
  * Pin definitions, Arduino Uno
  * GND
+ * 5,  PD5,    WR Data
  * 4,  PD4,    RD Data
- * A5, PC5,    /WRReq
- * A4, PC4,    /EnDrv
+ * 3,  PD3,    /WRReq
+ * 2,  PD2,    /EnDrv
  * A3, PC3,    Step3
  * A2, PC2,    Step2
  * A1, PC1,    Step1
@@ -52,6 +53,11 @@
 #define PORT_RDDATA   PORTD   //rddata.ino
 #define RD_DATA_BIT 4
 const byte rdDataPin = 4;
+
+/* Port and bit for WRDATA */
+#define PORT_WRDATA   PIND   //used in rddata.ino
+#define WR_DATA_BIT 5
+const byte wrDataPin = 5
 
 /* Port and bits for /EnDrv and /WRReq */
 #define PORT_CTL      PIND    //isr.ino
@@ -79,6 +85,7 @@ const byte stepPin0  = A0;
 /*
    Pin definitions, Arduino Mega2560
    GND
+   5,   PE3     WR Data
    4 ,  PG5,    RD Data
    3,   PE5,    /EnDrv
    2,   PE4,    /WRReq
@@ -92,6 +99,11 @@ const byte stepPin0  = A0;
 #define PORT_RDDATA   PORTG   //rddata.ino
 #define RD_DATA_BIT 5
 const byte rdDataPin = 4;
+
+/* Port and bit for WRDATA */
+#define PORT_WRDATA PINE   //used in rddata.ino
+#define WR_DATA_BIT 3
+const byte wrDataPin = 5;
 
 /* Port and bits for /EnDrv and /WRReq */
 #define PORT_CTL      PINE    //isr.ino
@@ -113,6 +125,7 @@ const byte stepPin0  = A8;
 #endif
 
 #else
+/* TODO, add support Arduino Nano every */
 #error "Unsupported architecture"
 
 #endif  //_DD20EMU_ACL_H_
