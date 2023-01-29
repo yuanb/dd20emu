@@ -31,6 +31,9 @@
 #define RD_HIGH   PORT_RDDATA |= RD_DATA_MASK;
 #define RD_LOW    PORT_RDDATA &= ~RD_DATA_MASK;
 
+#define WR_DATA_MASK   (1<<WR_DATA_BIT)
+#define WR_HIGH    PORT_WRDATA & WR_DATA_BIT
+
 
 #define FM_BIT_1  delay_11us; RD_HIGH;  delay_1us;  RD_LOW; delay_20us;
 #define FM_BIT_0  delay_31_2us;
@@ -42,7 +45,7 @@
 /*
  * Soft SPI, Most Significant Bit (MSB) first
  */
-inline void put_byte(byte v)
+inline void put_byte(uint8_t v)
 {
   FM_OUTPUT_BIT(v,0b10000000);
   FM_OUTPUT_BIT(v,0b01000000);
@@ -55,7 +58,7 @@ inline void put_byte(byte v)
 }
 
 uint8_t current_sector = 0;
-void handle_wr() {
+void handle_datastream() {
   if (drv_enabled && !write_request) {
     put_sector((uint8_t)vtech1_track_x2/2, current_sector);
     if (++current_sector >= SEC_NUM)
@@ -77,7 +80,10 @@ inline void put_sector(uint8_t n, uint8_t s)
     for(int j=0; j < SECSIZE_VZ; j++)
     {
       byte v = (byte *)fdc_sector[j];
-      put_byte(v);
+      if (!write_request)
+        put_byte(v);
+      else
+        serial_log(PSTR("\r\nWrite request raised at #%d bytes after sector reading.\r\n"), j-1);
     }
   }
 }

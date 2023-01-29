@@ -1,6 +1,6 @@
 /*
     DD-20 emulator
-    Copyright (C) 2020,2021 https://github.com/yuanb/
+    Copyright (C) 2020,2021,2022,2023 https://github.com/yuanb/dd20emu
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,8 +17,8 @@
 */
 
 /* Libraries used:
- *  SDFat : Author : Bill Greiman, Tested: 2.0.5, https://github.com/greiman/SdFat
- *  PinChangeInterrupt : Tested 1.2.8, https://github.com/NicoHood/PinChangeInterrupt
+ *  SDFat : Author : Bill Greiman, Tested: 2.2.0, https://github.com/greiman/SdFat
+ *  PinChangeInterrupt : Tested 1.2.9, https://github.com/NicoHood/PinChangeInterrupt
  *
  *  Libraries can be installed from Arduino IDE menu Tools\Manage Libraries
  */
@@ -28,8 +28,9 @@
  * 1. CLI interface
  *        https://www.norwegiancreations.com/2018/02/creating-a-command-line-interface-in-arduinos-serial-monitor/
  *        
- * 2. Mac Floppy Emu on Arduino
- *        https://github.com/yuanb/mac-floppy-emu/tree/master/floppy_emu_arduino
+ * 2. Write support
+ *        
+ * 3. Write Protect
  */
 
 #include <SPI.h>
@@ -72,7 +73,9 @@ void setup() {
     ; // wait for serial port to connect. Needed for native USB port only
   }
 
-  serial_log(PSTR("\r\nVTech DD20 emulator, v0.0.8, 02/21/2021\r\n"));
+  serial_log(PSTR("\r\nVTech DD20 emulator, v0.0.9, 01/22/2023\r\n"));
+  serial_log(PSTR("\r\nSector size: %d bytes"), sizeof(sector_t));
+  serial_log(PSTR("\r\nSector header size: %d bytes\r\n"), sizeof(sec_hdr_t));
 
   // put your setup code here, to run once:
   // set the digital pin as output:
@@ -81,6 +84,7 @@ void setup() {
   pinMode(enDrvPin, INPUT_PULLUP);
   pinMode(rdDataPin, OUTPUT);
   pinMode(wrReqPin, INPUT_PULLUP);
+  pinMode(wrDataPin,INPUT_PULLUP);
 
   pinMode(stepPin0, INPUT_PULLUP);
   pinMode(stepPin1, INPUT_PULLUP);
@@ -103,5 +107,5 @@ void setup() {
 }
 
 void loop() {
-  handle_wr();
+  handle_datastream();
 }

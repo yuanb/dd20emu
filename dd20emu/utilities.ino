@@ -33,6 +33,7 @@ inline void handle_drive_enable() {
 
 /**
  * Serial log on R/W request
+ * TODO: enable Trk# display -> serial console
  */
 bool old_wr_req = -1;
 void handle_wr_request() {

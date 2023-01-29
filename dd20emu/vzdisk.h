@@ -22,11 +22,11 @@
 
 #define TRK_NUM     40
 #define SEC_NUM     16
-#define SECSIZE_VZ  154
+#define SECSIZE_VZ  154   //SPEC size
 #define TRKSIZE_VZ  SECSIZE_VZ * SEC_NUM    //2464
 //#define TRKSIZE_VZ_PADDED TRKSIZE_VZ + 16
 
-//Since most of the sectors in various formats of disk images have short sync words ( 5x80h, 00h ), we can that normailized sector
+//Since most of the sectors in various formats of disk images have short sync words ( 5x80h, 00h ), we will use normailized sector header
 #define  NORMALIZED_SECTOR_HDR   1
  
 typedef struct SectorHeader {

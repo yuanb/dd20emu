@@ -203,7 +203,7 @@ void vzdisk::build_sector_lut()
     }
   }
 
-#if 1 //Dump Sector LUT
+#if 0 //Dump Sector LUT
   serial_log(PSTR("\r\nsec_lut: '0' means 6x80h+1x00h; '1' mean 5x80h+1x00h \r\n"));
   for(int i=0; i<TRK_NUM; i++)
   {
