@@ -54,6 +54,7 @@ void print_status()
   serial_log(PSTR("Mounted image file: %s\r\n"), filename);
   serial_log(PSTR("tracking padding: %d\r\n"), vzdsk->get_track_padding());
   serial_log(PSTR("current track: %d\r\n"), vtech1_track_x2/2);
+  serial_log(PSTR("sector size: %d\r\n"), SECSIZE_VZ);
 }
 
 void sd_dir()
@@ -95,10 +96,44 @@ void dump_lut()
   }  
 }
 
-void dump_sect(char* cmd)
+void dump_sector(int n, int s)
 {
+  serial_log(PSTR("TR:%d, SC:%d\r\n"), n,s);
+  if(vzdsk->get_sector(n, s) != -1)
+  {
+    for(int i=0; i < SECSIZE_VZ; i++)
+    {
+      int finish = i+16 < SECSIZE_VZ ? i+16 : SECSIZE_VZ;
   
+      for(int j=i; j<i+16; j++)
+      {
+        if (j<finish) {
+          serial_log(PSTR("%02X "), fdc_sector[j]);
+        }
+        else {
+          serial_log(PSTR("   "));
+        }
+      }
+      for(int j=i; j<finish; j++)
+      {
+        if (fdc_sector[j]>0x20 && fdc_sector[j]<0x7f) {
+          serial_log(PSTR("%c"), fdc_sector[j]);
+        }
+        else {
+          serial_log(PSTR("."));
+        }
+      }
+
+      i+=15;  //cause there is i++ in the loop
+      serial_log(PSTR("\r\n"));      
+    }
+
+    //TODO: add checksum
+    serial_log(PSTR("checksum: %d\r\n"), 0);
+    serial_log(PSTR("\r\n"));
+  }
 }
+
 void handle_shell()
 {
   serial_log(PSTR("DD-20 emulator command shell.\r\n"));
@@ -141,9 +176,13 @@ void handle_shell()
     }
 
     //dumpsect
-    else if (strncmp_P(cmd, PSTR("dumpsect"), 8)==0 {
-      //TODO, parse n and s
-      dump_sect(cmd);
+    else if (strncmp_P(cmd, PSTR("dumpsect "), 9)==0) {
+      int n=-1,s=-1;
+      sscanf(cmd+9, "%d %d", &n,&s);
+      if (n!=-1 && s!=-1) {
+        dump_sector(n, s);
+      } else
+        serial_log(PSTR("dumpsect n s\r\n"));
     }
 
     //exit
