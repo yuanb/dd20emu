@@ -72,6 +72,11 @@ int vzdisk::Open(char *filename)
   return result;
 }
 
+SdFat* vzdisk::get_sd()
+{
+  return &SD;
+}
+
 void vzdisk::set_track_padding()
 {
   unsigned long fsize = file.size();
@@ -101,6 +106,11 @@ void vzdisk::set_track_padding()
       serial_log(PSTR("%s is type 2/3 image, padding = %d bytes\r\n"), filename, padding);
     }
   }  
+}
+
+uint8_t vzdisk::get_track_padding()
+{
+  return padding;
 }
 
 void vzdisk::build_sector_lut()
@@ -202,19 +212,6 @@ void vzdisk::build_sector_lut()
       offset++;
     }
   }
-
-#if 0 //Dump Sector LUT
-  serial_log(PSTR("\r\nsec_lut: '0' means 6x80h+1x00h; '1' mean 5x80h+1x00h \r\n"));
-  for(int i=0; i<TRK_NUM; i++)
-  {
-    serial_log(PSTR("TR:%02d  "),i);
-    for(int j=0; j<SEC_NUM/2; j++)
-    {
-      serial_log(PSTR("%02x "), sec_lut[i][j]);
-    }
-    serial_log(PSTR("\r\n"));
-  }
-#endif
 
   serial_log(PSTR("Found %d sectors in %d ms.\r\n"), sectors, millis()-elapsed);
 }

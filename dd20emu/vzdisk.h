@@ -70,8 +70,11 @@ class vzdisk {
     vzdisk();
     int Open(char *filename);
     void set_track_padding();
+    uint8_t get_track_padding();
     void build_sector_lut();
-    int get_sector(uint8_t n, uint8_t s);    
+    int get_sector(uint8_t n, uint8_t s);
+
+    SdFat* get_sd();
 
   protected:
     int get_track(int n);

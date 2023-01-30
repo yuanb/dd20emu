@@ -104,8 +104,14 @@ void setup() {
   attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(stepPin3), handle_steps, CHANGE); 
 
   serial_log(PSTR("Begin DD-20 emulation, Free memory: %d bytes\r\n"), freeMemory());
+  print_enter_msg();
 }
 
 void loop() {
   handle_datastream();
+
+  int i = Serial.read();
+  if (i==0x0d || i==0x0a) {
+    handle_shell();
+  }
 }
