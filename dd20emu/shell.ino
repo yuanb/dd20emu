@@ -1,5 +1,24 @@
+/*
+    DD-20 emulator
+    Copyright (C) 2020-2023 https://github.com/yuanb/dd20emu
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
 #define TEMPBUFFER_SIZE 80
 byte tempbuffer[TEMPBUFFER_SIZE];
+
+#include "vzdisk.h"
 
 
 //https://github.com/dhansel/ArduinoFDC/blob/main/ArduinoFDC.ino
@@ -22,19 +41,12 @@ char *read_user_cmd(void *buffer, int buflen)
         }
       else if( isprint(i) && l<buflen-1 )
         { buf[l++] = i; Serial.write(i); }
-      
-      //if( motor_timeout>0 && millis() > motor_timeout ) { ArduinoFDC.motorOff(); motor_timeout = 0; }
     }
   while(true);
 
   while( l>0 && isspace(buf[l-1]) ) l--;
   buf[l] = 0;
   return buf;
-}
-
-void print_enter_msg()
-{
-  serial_log(PSTR("Press ENTER to enter dd20emu shell.\r\n"));
 }
 
 void print_help_screen()
@@ -51,34 +63,77 @@ void print_help_screen()
 
 void print_status()
 {
-  serial_log(PSTR("Mounted image file: %s\r\n"), filename);
+  serial_log(PSTR("\r\nVTech DD20 emulator, v0.0.a, 01/30/2023\r\n"));
+  serial_log(PSTR("\r\nSector size: %d bytes"), sizeof(sector_t));
+  serial_log(PSTR("\r\nSector header size: %d bytes\r\n"), sizeof(sec_hdr_t));
+  
+  serial_log(PSTR("Mounted image file: %s is "), diskimage);
+  if (vzdsk->get_mounted()) {
+    serial_log(PSTR("mounted\r\n"));
+  }
+  else {
+    serial_log(PSTR("not mounted\r\n"));
+  }
   serial_log(PSTR("tracking padding: %d\r\n"), vzdsk->get_track_padding());
   serial_log(PSTR("current track: %d\r\n"), vtech1_track_x2/2);
-  serial_log(PSTR("sector size: %d\r\n"), SECSIZE_VZ);
+  serial_log(PSTR("Free memory: %d bytes\r\n"), freeMemory());
+}
+
+void print_enter_msg()
+{
+  serial_log(PSTR("Press ENTER to enter dd20emu shell.\r\n"));
 }
 
 void sd_dir()
 {
   //TODO: separate SD object from vzdsk
-  SdFat* pSD = vzdsk->get_sd();
-  if (pSD->fatType() <=32) {
-    serial_log(PSTR("Volume is FAT%d"), pSD->fatType());
-    serial_log(PSTR("\r\n"));
+  SdFat* sd_prt = vzdsk->get_sd();
+  if (sd_prt->fatType() <=32) {
+    serial_log(PSTR("Volume is FAT%d\r\n"), sd_prt->fatType());
   } else {
     serial_log(PSTR("Volume is exFAT\r\n"));
   }
+
+  File root = sd_prt->open("/");
+  while(true) {
+    File entry =  root.openNextFile();
+    if (! entry) {
+      // no more files
+      break;
+    }
+    if (!entry.isDirectory()) {
+      if (entry.size() >=90000 && entry.size() <=100000) {
+      //if (entry.size() == 99184 || entry.size() == 99200) {
+        char filename[FILENAME_MAX];
+        entry.getName(filename, FILENAME_MAX);
+        serial_log(PSTR("%s\t\t\t%ld\r\n"), filename, entry.size());
+      }
+    }
+  }  
   
   //List file not hidden, ends with DSK
 }
 
 void mount_image(char* filename)
 {
-  
+  delete vzdsk;
+  memset(diskimage, 0, sizeof(diskimage));
+  strncpy(diskimage, filename, strlen(filename));
+  vzdsk = new vzdisk();
+  vzdsk->Open(diskimage);
 }
 
 void img_catalog()
 {
-  
+  if (vzdsk->get_sector(0,0)) {
+    sector_t *sector_ptr = (sector_t *)fdc_sector;
+    uint8_t *data_ptr = sector_ptr->data_bytes;
+    for(int i=0; i<16; i++) {
+      serial_log(PSTR("%02X "), *(data_ptr+i));
+    }
+
+    serial_log(PSTR("\r\n"));
+  }
 }
 
 extern int8_t sec_lut[TRK_NUM][SEC_NUM/2];
@@ -160,9 +215,9 @@ void handle_shell()
     }
 
     //mount
-    else if (strncmp_P(cmd, PSTR("mount"), 5)==0) {
+    else if (strncmp_P(cmd, PSTR("mount "), 6)==0) {
       //TODO parse filename
-      mount_image(cmd);
+      mount_image(cmd+6);
     }
 
     //catalog

@@ -1,6 +1,6 @@
 /*
     DD-20 emulator
-    Copyright (C) 2020,2021 https://github.com/yuanb/
+    Copyright (C) 2020,2023 https://github.com/yuanb/
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -47,6 +47,14 @@ vzdisk::vzdisk()
   }  
 }
 
+vzdisk::~vzdisk()
+{
+  if (file) {
+    file.close();
+    serial_log(PSTR("DSK file is closed.\r\n"));
+  }
+}
+
 int vzdisk::Open(char *filename)
 {
   int result = -1;
@@ -55,17 +63,21 @@ int vzdisk::Open(char *filename)
     if (SD.exists(filename))
     {
       file = SD.open(filename, FILE_READ);
-      if (file == false)
+      if (file)
       {
-        serial_log(PSTR("DSK File is not opened"));
+        result = 0;
+        set_track_padding();
+        build_sector_lut();
+        dsk_mounted = true;
+        serial_log(PSTR("Mounted disk image: '%s'.\r\n"), filename);
       }
       else {
-        result = 0;
+        serial_log(PSTR("DSK File is not opened\r\n"));
       }
     }
     else
     {
-      serial_log(PSTR("Can't find FLOPPY1.DSK"));
+      serial_log(PSTR("Can't find %s\r\n"), filename);
     }
   }
 
@@ -77,12 +89,17 @@ SdFat* vzdisk::get_sd()
   return &SD;
 }
 
+bool vzdisk::get_mounted()
+{
+  return dsk_mounted;
+}
+
 void vzdisk::set_track_padding()
 {
   unsigned long fsize = file.size();
   
   if (fsize == 98560) {
-    serial_log(PSTR("%s is type 1 image, no padding.\r\n"), filename);
+    serial_log(PSTR("Type 1 image, no padding.\r\n"));
     padding = 0;
   }
   else //if (fsize == 99184 || fsize == 99200)
@@ -103,7 +120,7 @@ void vzdisk::set_track_padding()
     }
     if (padding_found) {
       padding = 16;
-      serial_log(PSTR("%s is type 2/3 image, padding = %d bytes\r\n"), filename, padding);
+      serial_log(PSTR("Type 2/3 image, padding = %d bytes\r\n"), padding);
     }
   }  
 }
@@ -223,8 +240,43 @@ void vzdisk::build_sector_lut()
 int vzdisk::get_sector(uint8_t n, uint8_t s)
 {
   int result = -1;
+  if (dsk_mounted) {
+    result = seekto_sector(n,s);
+  
+    result= file.read(fdc_sector, SECSIZE_VZ);
+  
+    if (result != -1)
+    { 
+      sec_hdr_t *sec_hdr = (sec_hdr_t *)fdc_sector;
+      
+      //IDAM leading, TR, SC checking
+      if (sec_hdr->IDAM_leading[0] == 0xFE && sec_hdr->IDAM_leading[1] == 0xE7 && sec_hdr->IDAM_leading[2] == 0x18 && sec_hdr->IDAM_leading[3] == 0xC3) {
+        if (n == sec_hdr->TR && pgm_read_byte_near(&sector_interleave[s]) == sec_hdr->SC) {
+          return result;
+        }
+        else {
+          serial_log(PSTR("Expecting T:%d, S%d, but got T:%d, S:%d\r\n"), n, s, sec_hdr->TR, sec_hdr->SC);
+        }
+      }
+      else {
+        serial_log(PSTR("Invalid IDAM T:%d, S%d\r\n"), n, s);
+      }
+    }
+    else {
+      serial_log(PSTR("Failed to read T:%d, S%d\r\n"), n, s);
+    }
+  
+    reconstruct_sector();
+  }
+  
+  return result;
+}
+
+int vzdisk::seekto_sector(uint8_t n, uint8_t s)
+{
+  int result = -1;
   if (n<TRK_NUM && s<SEC_NUM)
-  {  
+  {
     unsigned long expected_offset = (unsigned long)n*(SEC_NUM*sizeof(sector_t)+padding) + (unsigned long)s*sizeof(sector_t);
     uint8_t value = s%2==0 ? (sec_lut[n][s] >>4) : (sec_lut[n][s] & 0x0F);
 
@@ -232,37 +284,21 @@ int vzdisk::get_sector(uint8_t n, uint8_t s)
     unsigned long calculated_offset = expected_offset + (value + n*16 + s);
 
     if (file.seek(calculated_offset) != false)
-    { 
-      result= file.read(fdc_sector, SECSIZE_VZ);
-    
-      if (result != -1)
-      { 
-        sec_hdr_t *sec_hdr = (sec_hdr_t *)fdc_sector;
-        
-        //IDAM leading, TR, SC checking
-        if (sec_hdr->IDAM_leading[0] == 0xFE && sec_hdr->IDAM_leading[1] == 0xE7 && sec_hdr->IDAM_leading[2] == 0x18 && sec_hdr->IDAM_leading[3] == 0xC3) {
-          if (n == sec_hdr->TR && pgm_read_byte_near(&sector_interleave[s]) == sec_hdr->SC) {
-            return result;
-          }
-          else {
-            serial_log(PSTR("Expecting T:%d, S%d, but got T:%d, S:%d\r\n"), n, s, sec_hdr->TR, sec_hdr->SC);
-          }
-        }
-        else {
-          serial_log(PSTR("Invalid IDAM T:%d, S%d\r\n"), n, s);
-        }
-      }
-      else {
-        serial_log(PSTR("Failed to read T:%d, S%d\r\n"), n, s);
-      }
+    {
+      result = 0;
     }
     else {
       serial_log(PSTR("Failed to seek to T:%d, S%d\r\n"), n, s);
-    }
+    }           
   }
   else {
-      serial_log(PSTR("Invalid sector T:%d, S%d requested\r\n"), n, s);
+    serial_log(PSTR("Invalid sector T:%d, S%d requested\r\n"), n, s);
   }
 
   return result;
+}
+
+void vzdisk::reconstruct_sector()
+{
+  
 }

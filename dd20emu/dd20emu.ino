@@ -39,6 +39,8 @@
 #include "dd20emu_acl.h"
 #include "vzdisk.h"
 
+#define FILENAME_MAX  48
+
 /*
  * Laser 310 I/O port
    Port 10h     Latch(write-only)
@@ -57,7 +59,8 @@
 
 //Disk image format 2 (formatted from vzemu), fsize = 99185
 //TODO : "GHOST2" Disk I/O Error, Invalid IDAM on TR 39
-char filename[] = "HELLO.DSK";
+//TODO: use dynamic memory
+char diskimage[FILENAME_MAX] = "HELLO.DSK";
 
 //Disk image format 2(created from empty file from vzemu)
 //char filename[] = "20201016.DSK";
@@ -73,9 +76,8 @@ void setup() {
     ; // wait for serial port to connect. Needed for native USB port only
   }
 
-  serial_log(PSTR("\r\nVTech DD20 emulator, v0.0.9, 01/22/2023\r\n"));
-  serial_log(PSTR("\r\nSector size: %d bytes"), sizeof(sector_t));
-  serial_log(PSTR("\r\nSector header size: %d bytes\r\n"), sizeof(sec_hdr_t));
+  serial_log(PSTR("Begin DD-20 emulation\r\n"));
+  print_status();
 
   // put your setup code here, to run once:
   // set the digital pin as output:
@@ -92,9 +94,7 @@ void setup() {
   pinMode(stepPin3, INPUT_PULLUP);
 
   vzdsk = new vzdisk();
-  vzdsk->Open(filename);
-  vzdsk->set_track_padding();  
-  vzdsk->build_sector_lut();
+  vzdsk->Open(diskimage); 
 
   attachInterrupt(digitalPinToInterrupt(wrReqPin), writeRequest, CHANGE);
   attachInterrupt(digitalPinToInterrupt(enDrvPin), driveEnabled, CHANGE);
@@ -103,7 +103,6 @@ void setup() {
   attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(stepPin2), handle_steps, CHANGE);
   attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(stepPin3), handle_steps, CHANGE); 
 
-  serial_log(PSTR("Begin DD-20 emulation, Free memory: %d bytes\r\n"), freeMemory());
   print_enter_msg();
 }
 
