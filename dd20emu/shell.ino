@@ -15,11 +15,8 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-#define TEMPBUFFER_SIZE 80
-byte tempbuffer[TEMPBUFFER_SIZE];
-
 #include "vzdisk.h"
-
+#define TEMPBUFFER_SIZE 80
 
 //https://github.com/dhansel/ArduinoFDC/blob/main/ArduinoFDC.ino
 char *read_user_cmd(void *buffer, int buflen)
@@ -189,12 +186,16 @@ void dump_sector(int n, int s)
   }
 }
 
+
 void handle_shell()
-{
+{ 
+  bool in_shell = true;
+  byte *tempbuffer = new byte(TEMPBUFFER_SIZE);
+
   serial_log(PSTR("DD-20 emulator command shell.\r\n"));
   serial_log(PSTR("Emulator is PAUSED.\r\n"));
   serial_log(PSTR("type ?/help for help screen.\r\n"));
-  bool in_shell = true;
+
   while(in_shell) {
     Serial.print(">");
     char *cmd = read_user_cmd(tempbuffer, TEMPBUFFER_SIZE);
@@ -250,5 +251,7 @@ void handle_shell()
     {
       serial_log(PSTR("Unknown command: %s\r\n"), cmd); 
     }
-  }  
+  }
+
+  delete tempbuffer;
 }
