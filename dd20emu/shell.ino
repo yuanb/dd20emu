@@ -98,12 +98,12 @@ void sd_dir()
       // no more files
       break;
     }
+    //TODO: Check file extension, file size
     if (!entry.isDirectory()) {
-      if (entry.size() >=90000 && entry.size() <=100000) {
-      //if (entry.size() == 99184 || entry.size() == 99200) {
+      if (entry.size() >=98560 && entry.size() <=99200) {
         char filename[FILENAME_MAX];
         entry.getName(filename, FILENAME_MAX);
-        serial_log(PSTR("%s\t\t\t%ld\r\n"), filename, entry.size());
+        serial_log(PSTR("%s\t%ld\r\n"), filename, entry.size());
       }
     }
   }  

@@ -39,7 +39,7 @@
 #include "dd20emu_acl.h"
 #include "vzdisk.h"
 
-#define FILENAME_MAX  48
+#define FILENAME_MAX  80
 
 /*
  * Laser 310 I/O port
