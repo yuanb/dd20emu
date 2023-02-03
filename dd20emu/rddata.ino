@@ -56,7 +56,7 @@ uint8_t bitmask[8] = {
 /*
  * Soft SPI, Most Significant Bit (MSB) first
  */
-inline void put_byte(uint8_t v)
+inline uint8_t put_byte(uint8_t v)
 {
 //  FM_OUTPUT_BIT(v,0b10000000);
 //  FM_OUTPUT_BIT(v,0b01000000);
@@ -66,9 +66,12 @@ inline void put_byte(uint8_t v)
 //  FM_OUTPUT_BIT(v,0b00000100);
 //  FM_OUTPUT_BIT(v,0b00000010);
 //  FM_OUTPUT_BIT(v,0b00000001);
-  for(uint8_t i=0; i<8 & !write_request; i++) {
+  uint8_t i;
+  for(i=0; i<8 & !write_request; i++) {
     FM_OUTPUT_BIT(v, bitmask[i]);
   }
+
+  return i;
 }
 
 uint8_t current_sector = 0;
@@ -91,15 +94,21 @@ inline void put_sector(uint8_t n, uint8_t s)
     if (n != vtech1_track_x2/2)
       return;
 
+    bool closing_bit = true;
     for(int j=0; j < SECSIZE_VZ; j++)
     {
-      byte v = (byte *)fdc_sector[j];
-      //if (!write_request)
-      put_byte(v);
+      uint8_t i = put_byte(fdc_sector[j]);
+      if (i!=8) {
+        closing_bit = false;
+        break;
+      }
 //      else
 //        serial_log(PSTR("\r\nWrite request raised at #%d bytes after sector reading.\r\n"), j-1);
     }
-    //last byte of the sector, closing pulse
-    pulse_1us;
+
+    if (closing_bit) {
+      //last byte of the sector, closing pulse
+      pulse_1us;
+    }
   }
 }
