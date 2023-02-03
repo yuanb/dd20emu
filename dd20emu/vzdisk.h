@@ -1,6 +1,6 @@
 /*
     DD-20 emulator
-    Copyright (C) 2020,2021 https://github.com/yuanb/
+    Copyright (C) 2020,2023 https://github.com/yuanb/
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@
 #define SEC_NUM     16
 #define SECSIZE_VZ  154   //SPEC size
 #define TRKSIZE_VZ  SECSIZE_VZ * SEC_NUM    //2464
+#define SEC_DATA_SIZE 126
 //#define TRKSIZE_VZ_PADDED TRKSIZE_VZ + 16
 
 //Since most of the sectors in various formats of disk images have short sync words ( 5x80h, 00h ), we will use normailized sector header
@@ -51,7 +52,7 @@ typedef struct SectorHeader {
 
 typedef struct Sector {
   sec_hdr_t   header;
-  uint8_t     data_bytes[126];
+  uint8_t     data_bytes[SEC_DATA_SIZE];
   uint8_t     next_track;
   uint8_t     next_sector;
   uint16_t    checksum;
@@ -68,19 +69,29 @@ typedef struct Track {
 class vzdisk {
   public:
     vzdisk();
+    ~vzdisk();
+
     int Open(char *filename);
     void set_track_padding();
+    uint8_t get_track_padding();
     void build_sector_lut();
-    int get_sector(uint8_t n, uint8_t s);    
+    int get_sector(uint8_t n, uint8_t s);
+
+    SdFat* get_sd();
+    bool get_mounted();
 
   protected:
     int get_track(int n);
 
   private:
     bool sdInitialized = false;
+    bool dsk_mounted = false;
     SdFat SD;
     File file;
     uint8_t padding = 0; 
+
+    int seekto_sector(uint8_t n, uint8_t s);
+    void reconstruct_sector();
 };
 
 #endif	//_VZDISK_H_

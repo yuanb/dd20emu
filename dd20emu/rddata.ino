@@ -1,6 +1,6 @@
 /*
     DD-20 emulator
-    Copyright (C) 2020,2021 https://github.com/yuanb/
+    Copyright (C) 2020-2023 https://github.com/yuanb/dd20emu
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -70,7 +70,7 @@ extern uint8_t fdc_sector[SECSIZE_VZ];
 extern vzdisk* vzdsk;
 inline void put_sector(uint8_t n, uint8_t s)
 {
-  if (vzdsk->get_sector(n, s) != -1)
+  if (vzdsk && vzdsk->get_sector(n, s) != -1)
   {
     //In theory, this should speed up disk read a bit
     //Track has changed while reading sector from SD, skip playing back
