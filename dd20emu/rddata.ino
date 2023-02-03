@@ -17,15 +17,15 @@
 */
 
 //Tested values
+//FM encoded 0 : ___n__________n___ : 1.083us + 31.75us
+//FM encoded 1 : ___n___n______n___ : 1.083us + 11 us + 1.083us + 20 us + 1.083us
 
-//FM encoded 0 : ___n__________n___ : 1.125us + 31.75us
-//FM encoded 1 : ___n___n______n___ : 1.125us + 11 us + 1.125us + 20 us
 
-
-#define delay_1us   __builtin_avr_delay_cycles (16)
+#define delay_1us   __builtin_avr_delay_cycles (15)
 #define delay_11us  __builtin_avr_delay_cycles (170)
-#define delay_20us  __builtin_avr_delay_cycles (300)
+#define delay_20us  __builtin_avr_delay_cycles (298)
 #define delay_31_2us  __builtin_avr_delay_cycles (488)
+#define pulse_1us   RD_HIGH; delay_1us; RD_LOW
 
 #define RD_DATA_MASK   (1<<RD_DATA_BIT)
 #define RD_HIGH   PORT_RDDATA |= RD_DATA_MASK;
@@ -35,12 +35,12 @@
 #define WR_HIGH    PORT_WRDATA & WR_DATA_BIT
 
 
-#define FM_BIT_1  delay_11us; RD_HIGH;  delay_1us;  RD_LOW; delay_20us;
+#define FM_BIT_1  delay_11us; pulse_1us; delay_20us;
 #define FM_BIT_0  delay_31_2us;
 
 #define FM_ENCODE_BIT(v,m) {  if (v & m) { FM_BIT_1; } else { FM_BIT_0; } }
 
-#define FM_OUTPUT_BIT(v,m) { RD_HIGH; delay_1us; RD_LOW;  FM_ENCODE_BIT(v,m); }
+#define FM_OUTPUT_BIT(v,m) { pulse_1us; FM_ENCODE_BIT(v,m); }
 
 /*
  * Soft SPI, Most Significant Bit (MSB) first
@@ -85,5 +85,7 @@ inline void put_sector(uint8_t n, uint8_t s)
       else
         serial_log(PSTR("\r\nWrite request raised at #%d bytes after sector reading.\r\n"), j-1);
     }
+    //last byte of the sector, closing pulse
+    pulse_1us;
   }
 }
