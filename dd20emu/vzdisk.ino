@@ -302,3 +302,31 @@ void vzdisk::reconstruct_sector()
 {
   
 }
+//
+//int vzdisk::get_sector1(uint8_t TR, uint8_t SEC)
+//{
+//  int result = -1;
+//  uint8_t buf[SECSIZE_VZ+5];
+//
+//  unsigned long tr_offset = (unsigned long)TR*(SEC_NUM*sizeof(sector_t)+padding);
+//  file.seek(tr_offset);
+//  unsigned long current_pos = file.position();  //
+//
+//  uint8_t cursor=0;
+//  file.read(buf, sizeof(buf));
+//  if (buf[0] == 0x80 && buf[1] == 0x80 && buf[2] == 0x80 && buf[3] == 0x80 && buf[4] == 0x80) {
+//    //I think this is a sector header
+//    if (buf[5] == 0x80 && buf[6] == 0x00) {
+//      cursor += 7;
+//    } else if (buf[5] == 0x00) {
+//      cursor += 6;
+//    }
+//
+//    if (buf[cursor] == 0xFE && buf[cursor+1] == 0xE7 && buf[cursor+2] == 0x18 && buf[cursor+3] == 0xC3) {
+//      cursor += 4;
+//      serial_log(PSTR("TR: %d, SEC:%d, Checksum:%02xH\r\n"),buf[cursor], buf[cursor+1], buf[cursor+2]);
+//    }
+//  }
+//
+//  return result;
+//}
