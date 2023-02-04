@@ -55,6 +55,7 @@ void print_help_screen()
   serial_log(PSTR("catalog - Catalog DD20 disk image\r\n"));
   serial_log(PSTR("dumplut - Dump LUT table\r\n"));
   serial_log(PSTR("dumpsect n s - Dump sector on track n, sector s\r\n"));
+  serial_log(PSTR("trklist - Dump track offsets\r\n"));
   serial_log(PSTR("exit - Exit from shell, resume emulator\r\n"));
 }
 
@@ -186,6 +187,12 @@ void dump_sector(int n, int s)
   }
 }
 
+void trklist()
+{
+  for(uint8_t i=0; i<TRK_NUM; i++) {
+    serial_log(PSTR("TR:%02d - %08lX\r\n"), i, vzdsk->get_track_offset(i));
+  }  
+}
 
 void handle_shell()
 { 
@@ -239,6 +246,11 @@ void handle_shell()
         dump_sector(n, s);
       } else
         serial_log(PSTR("dumpsect n s\r\n"));
+    }
+
+    //trklist
+    else if (strncmp_P(cmd, PSTR("trklist"), 7)==0) {
+      trklist();
     }
 
     //exit

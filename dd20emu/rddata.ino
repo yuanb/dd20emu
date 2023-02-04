@@ -97,8 +97,7 @@ inline void put_sector(uint8_t n, uint8_t s)
     bool closing_bit = true;
     for(int j=0; j < SECSIZE_VZ; j++)
     {
-      uint8_t i = put_byte(fdc_sector[j]);
-      if (i!=8) {
+      if (put_byte(fdc_sector[j]) != 8) {
         closing_bit = false;
         break;
       }
