@@ -130,6 +130,12 @@ uint8_t vzdisk::get_track_padding()
   return padding;
 }
 
+unsigned long vzdisk::get_track_offset(uint8_t TR)
+{
+  unsigned long expected_track_offset = (unsigned long)TR*(SEC_NUM*sizeof(sector_t)+padding);
+  return expected_track_offset;
+}
+
 void vzdisk::build_sector_lut()
 {
   uint8_t buf[13] = {0};
@@ -167,7 +173,7 @@ void vzdisk::build_sector_lut()
       uint8_t TR = buf[11];
       uint8_t SEC= pgm_read_byte_near(&inversed_sec_interleave[buf[12]]);
       
-      unsigned long expected_offset = (unsigned long)TR*(SEC_NUM*sizeof(sector_t)+padding) + (unsigned long)SEC*sizeof(sector_t);
+      unsigned long expected_offset = get_track_offset(TR) + SEC*sizeof(sector_t);
       //TODO: Correct value : change 1 to 0 for 7 bytes header
       int delta = offset + 1 - expected_offset;
       uint8_t value = delta - TR*16 - SEC;
@@ -200,7 +206,7 @@ void vzdisk::build_sector_lut()
       uint8_t TR = buf[10];
       uint8_t SEC = pgm_read_byte_near(&inversed_sec_interleave[buf[11]]);
       
-      unsigned long expected_offset = (unsigned long)TR*(SEC_NUM*sizeof(sector_t)+padding) + (unsigned long)SEC*sizeof(sector_t);
+      unsigned long expected_offset = get_track_offset(TR) + SEC*sizeof(sector_t);
       int delta = offset - expected_offset;
       uint8_t value = delta - TR*16 - SEC;   
       if (SEC%2==0) {
@@ -272,27 +278,27 @@ int vzdisk::get_sector(uint8_t n, uint8_t s)
   return result;
 }
 
-int vzdisk::seekto_sector(uint8_t n, uint8_t s)
+int vzdisk::seekto_sector(uint8_t TR, uint8_t SEC)
 {
   int result = -1;
-  if (n<TRK_NUM && s<SEC_NUM)
+  if (TR<TRK_NUM && SEC<SEC_NUM)
   {
-    unsigned long expected_offset = (unsigned long)n*(SEC_NUM*sizeof(sector_t)+padding) + (unsigned long)s*sizeof(sector_t);
-    uint8_t value = s%2==0 ? (sec_lut[n][s] >>4) : (sec_lut[n][s] & 0x0F);
+    unsigned long expected_offset = get_track_offset(TR) + SEC*sizeof(sector_t);
+    uint8_t value = SEC%2==0 ? (sec_lut[TR][SEC] >>4) : (sec_lut[TR][SEC] & 0x0F);
 
     //Adjust offset!!!!!!!!!!!!!!
-    unsigned long calculated_offset = expected_offset + (value + n*16 + s);
+    unsigned long calculated_offset = expected_offset + (value + TR*16 + SEC);
 
     if (file.seek(calculated_offset) != false)
     {
       result = 0;
     }
     else {
-      serial_log(PSTR("Failed to seek to T:%d, S%d\r\n"), n, s);
+      serial_log(PSTR("Failed to seek to T:%d, S%d\r\n"), TR, SEC);
     }           
   }
   else {
-    serial_log(PSTR("Invalid sector T:%d, S%d requested\r\n"), n, s);
+    serial_log(PSTR("Invalid sector T:%d, S%d requested\r\n"), TR, SEC);
   }
 
   return result;

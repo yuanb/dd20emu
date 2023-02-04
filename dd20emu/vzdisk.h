@@ -76,6 +76,7 @@ class vzdisk {
     uint8_t get_track_padding();
     void build_sector_lut();
     int get_sector(uint8_t n, uint8_t s);
+    unsigned long get_track_offset(uint8_t TR);
 
     SdFat* get_sd();
     bool get_mounted();
@@ -90,7 +91,7 @@ class vzdisk {
     File file;
     uint8_t padding = 0; 
 
-    int seekto_sector(uint8_t n, uint8_t s);
+    int seekto_sector(uint8_t TR, uint8_t SEC);
     void reconstruct_sector();
 };
 
