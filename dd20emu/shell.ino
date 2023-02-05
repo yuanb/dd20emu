@@ -157,7 +157,7 @@ void dump_lut()
 void dump_sector(int n, int s)
 {
   serial_log(PSTR("TR:%d, SC:%d\r\n"), n,s);
-  if(vzdsk->get_sector(n, s) != -1)
+  if(vzdsk->get_sector1(n, s) != -1)
   {
     for(int i=0; i < SECSIZE_VZ; i++)
     {
@@ -186,8 +186,6 @@ void dump_sector(int n, int s)
       serial_log(PSTR("\r\n"));      
     }
 
-    //TODO: add checksum
-    serial_log(PSTR("checksum: %d\r\n"), 0);
     serial_log(PSTR("\r\n"));
   }
 }
@@ -214,8 +212,8 @@ void scandisk()
 
   randomSeed(analogRead(0));
 
-  serial_log(PSTR("\r\n200 random track scanning\r\n"));
-  for(int i=0; i<200; i++) {
+  serial_log(PSTR("\r\n100 random track scanning\r\n"));
+  for(int i=0; i<100; i++) {
     uint8_t tr = random(0, TRK_NUM);
     for(uint8_t j=0; j<SEC_NUM; j++) {
       serial_log(PSTR("\r#%03d, TR:%02d, SEC:%02d"), i+1, tr,j);
@@ -227,8 +225,6 @@ void scandisk()
   }
 
   serial_log(PSTR("\r\n200 random sector scanning\r\n"));
-
-  
   for(int i=0; i<200; i++) {
     uint8_t tr = random(0, TRK_NUM);
     uint8_t sec = random(0, SEC_NUM);

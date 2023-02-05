@@ -34,6 +34,15 @@ const uint8_t sector_interleave[SEC_NUM] PROGMEM = { 0, 11, 6, 1, 12, 7, 2, 13, 
 //used in build_sector_lut()
 const uint8_t inversed_sec_interleave[SEC_NUM] PROGMEM = {0, 3, 6, 9, 12, 15, 2, 5, 8, 11, 14, 1, 4, 7, 10, 13};
 
+//sector header template
+const uint8_t _sector_header[sizeof(sec_hdr_t)] PROGMEM = {
+    0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x00,
+    0xFE, 0xE7, 0x18, 0xC3,
+    0xFF, 0xFF, 0xFF,
+    0x80, 0x80, 0x80, 0x80, 0x80, 0x00,
+    0xC3, 0x18, 0xE7, 0xFE
+};
+
 /*40 tracks, 8 bytes/track packed*/
 int8_t sec_lut[TRK_NUM][SEC_NUM/2] = { 0 };
 
@@ -330,7 +339,7 @@ bool vzdisk::get_sector1(uint8_t TR, uint8_t SEC, bool v)
   }
 
   while(true) {
-    //TODO: break if have scanned the entire track for 3x times
+    //TODO: break if have retried(scanned) the entire track for 3x times, this would help to slide the GAP1 window to sync'd position
     
     //if at the end of a track or the file, go back to beginning of the track
     if (0==file.available() || current_cur >= get_track_offset(1)) {
@@ -344,7 +353,7 @@ bool vzdisk::get_sector1(uint8_t TR, uint8_t SEC, bool v)
     file.seek(current_offset + current_cur);
     file.read(buf, sizeof(buf));
             
-    int cur = 0;
+    uint8_t cur = 0;
     int ngap1 = 0;
 
     //Sync to 0x80 0x80.... 0x00
@@ -367,8 +376,8 @@ bool vzdisk::get_sector1(uint8_t TR, uint8_t SEC, bool v)
   
         uint8_t tr = buf[cur++];
         uint8_t sec = buf[cur++];
-        uint8_t ts = buf[cur++];
-        assert( ts==tr+sec );
+        uint8_t ts_sum = buf[cur++];
+        assert( ts_sum==tr+sec );
 
         int ngap2 = 0;
         while(buf[cur] != 0x00) {
@@ -381,13 +390,15 @@ bool vzdisk::get_sector1(uint8_t TR, uint8_t SEC, bool v)
 
         if (tr == TR && pgm_read_byte_near(&inversed_sec_interleave[sec]) == SEC) {
           if (v) {
-            serial_log(PSTR("\r\nfound idam -> TR: %d, SEC:%d, T+S:%d @ %08lX\r\n"),tr, sec, ts, idam);
+            serial_log(PSTR("\r\nfound idam -> TR: %d, SEC:%d, T+S:%d @ %08lX\r\n"),tr, sec, ts_sum, idam);
           }
           
           //data part
           uint16_t checksum = 0;
           for(int i=0; i<SEC_DATA_SIZE+2 /*TODO:remove when next tr, sec removed from sector struct*/; i++) {
-            checksum += buf[cur++];
+            uint8_t value = buf[cur++];
+            checksum += value;
+            fdc_sector[sizeof(sec_hdr_t)+i] = value;
           }
           uint16_t checksum_exp = buf[cur++] + 256*buf[cur++];
           if (checksum != checksum_exp) {
@@ -396,6 +407,18 @@ bool vzdisk::get_sector1(uint8_t TR, uint8_t SEC, bool v)
           //real real checksum
           assert(checksum == checksum_exp);
           current_cur += cur; //TODO: should add '(sizeof(sec_hdr_t) + SEC_DATA_SIZE + 2 + 2', let's wait till memcpy is done
+
+          //Copy sector to target fdc_sector
+          memcpy_PF(fdc_sector, pgm_get_far_address(_sector_header), sizeof(sec_hdr_t));
+          sec_hdr_t* sec_hdr = (sec_hdr_t *)fdc_sector;
+          
+          sec_hdr->TR = tr;
+          sec_hdr->SC = sec;
+          sec_hdr->TS_sum = ts_sum;
+          ((sector_t *)fdc_sector)->checksum = checksum_exp;
+          
+          /*TODO: ideally, we would only copy the sector data to target from here, but it maybe more efficient to copy each byte int he checksum verification loop
+          memcpy(&fdc_sector+sizeof(sec_hdr_t), buf[data_pos], SEC_DATA_SIZE+2+2); */
           result = true;
           break;
         }

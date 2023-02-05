@@ -75,6 +75,9 @@ class vzdisk {
     void set_track_padding();
     uint8_t get_track_padding();
     void build_sector_lut();
+
+    /*s:sec, the #s'th sector in a track, check sector_interleave*/
+    /*s=5, will return sector 7 from the track*/
     int get_sector(uint8_t n, uint8_t s);
     bool get_sector1(uint8_t n, uint8_t s, bool b=false);
     unsigned long get_track_offset(uint8_t TR);
