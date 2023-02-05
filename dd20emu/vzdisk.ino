@@ -347,6 +347,7 @@ bool vzdisk::get_sector1(uint8_t TR, uint8_t SEC, bool v)
     int cur = 0;
     int ngap1 = 0;
 
+    //Sync to 0x80 0x80.... 0x00
     while(buf[cur] != 0x00) {
       if (buf[cur] == 0x80)
         ngap1++;
@@ -354,6 +355,8 @@ bool vzdisk::get_sector1(uint8_t TR, uint8_t SEC, bool v)
       if (cur>=SECSIZE_VZ)
         break;
     }
+
+    //TODO:If drift is too much, the remaining in buffer wont have the whole sector, slide the window, read data from new pos
     if (cur>=SECSIZE_VZ) {
       serial_log(PSTR("Err1, seeded to :%08lX\r\n"), (current_offset+current_cur));
     }
