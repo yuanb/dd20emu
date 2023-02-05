@@ -56,6 +56,7 @@ void print_help_screen()
   serial_log(PSTR("dumplut - Dump LUT table\r\n"));
   serial_log(PSTR("dumpsect n s - Dump sector on track n, sector s\r\n"));
   serial_log(PSTR("trklist - Dump track offsets\r\n"));
+  serial_log(PSTR("scandisk - Scan all sectors from all tracks\r\n"));
   serial_log(PSTR("exit - Exit from shell, resume emulator\r\n"));
 }
 
@@ -104,7 +105,11 @@ void sd_dir()
       if (entry.size() >=98560 && entry.size() <=99200) {
         char filename[FILENAME_MAX];
         entry.getName(filename, FILENAME_MAX);
-        serial_log(PSTR("%s\t%ld\r\n"), filename, entry.size());
+        serial_log(PSTR("%s"), filename);
+//        for(int i=0; i<FILENAME_MAX-strnlen(filename, FILENAME_MAX); i++)
+//          serial_log(PSTR("%c"), ' ');
+          
+        serial_log(PSTR("\t%ld\r\n"), entry.size());
       }
     }
   }  
@@ -194,6 +199,49 @@ void trklist()
   }  
 }
 
+void scandisk()
+{
+  serial_log(PSTR("Sequential scanning\r\n"));
+  for(uint8_t i=0; i<TRK_NUM; i++) {
+    for(uint8_t j=0; j<SEC_NUM; j++) {
+      serial_log(PSTR("\rTR:%d, SEC:%d"), i, j);
+      bool found = vzdsk->get_sector1(i,j);
+      if (!found) {
+        serial_log(PSTR("\r\nNot found:%d, %d\r\n"), i,j);
+      }
+    }
+  }
+
+  randomSeed(analogRead(0));
+
+  serial_log(PSTR("\r\n200 random track scanning\r\n"));
+  for(int i=0; i<200; i++) {
+    uint8_t tr = random(0, TRK_NUM);
+    for(uint8_t j=0; j<SEC_NUM; j++) {
+      serial_log(PSTR("\r#%03d, TR:%02d, SEC:%02d"), i+1, tr,j);
+      bool found = vzdsk->get_sector1(tr,j);
+      if (!found) {
+        serial_log(PSTR("\r\nNot found:TR:%d, SEC:%d\r\n"), tr,j);
+      }
+    }
+  }
+
+  serial_log(PSTR("\r\n200 random sector scanning\r\n"));
+
+  
+  for(int i=0; i<200; i++) {
+    uint8_t tr = random(0, TRK_NUM);
+    uint8_t sec = random(0, SEC_NUM);
+    serial_log(PSTR("\r#%03d, TR:%02d, SEC:%02d"),i+1, tr,sec);
+    bool found = vzdsk->get_sector1(tr, sec);
+    if (!found) {
+        serial_log(PSTR("\r\nNot found:%d, %d\r\n"), tr, sec);     
+    }
+  }
+
+  serial_log(PSTR("\r\nEnd of scandisk\r\n"));
+}
+
 void handle_shell()
 { 
   bool in_shell = true;
@@ -251,6 +299,11 @@ void handle_shell()
     //trklist
     else if (strncmp_P(cmd, PSTR("trklist"), 7)==0) {
       trklist();
+    }
+
+    //scandisk
+    else if (strncmp_P(cmd, PSTR("scandisk"), 8)==0) {
+      scandisk();
     }
 
     //exit

@@ -28,7 +28,7 @@
 //#define TRKSIZE_VZ_PADDED TRKSIZE_VZ + 16
 
 //Since most of the sectors in various formats of disk images have short sync words ( 5x80h, 00h ), we will use normailized sector header
-#define  NORMALIZED_SECTOR_HDR   1
+//#define  NORMALIZED_SECTOR_HDR   1
  
 typedef struct SectorHeader {
   /*Normalized means, if the GAP1 is 7 bytes, the first byte is skipped, only 6 bytes in output*/  
@@ -76,6 +76,7 @@ class vzdisk {
     uint8_t get_track_padding();
     void build_sector_lut();
     int get_sector(uint8_t n, uint8_t s);
+    bool get_sector1(uint8_t n, uint8_t s, bool b=false);
     unsigned long get_track_offset(uint8_t TR);
 
     SdFat* get_sd();
@@ -85,8 +86,13 @@ class vzdisk {
     int get_track(int n);
 
   private:
-    bool sdInitialized = false;
-    bool dsk_mounted = false;
+    bool sdInitialized;
+    bool dsk_mounted;
+    
+    uint8_t current_track;
+    unsigned long current_offset;
+    uint16_t current_cur;
+    
     SdFat SD;
     File file;
     uint8_t padding = 0; 

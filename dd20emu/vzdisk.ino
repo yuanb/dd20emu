@@ -23,6 +23,9 @@
  * Type 3. file size is 99200 bytes
 **/
 
+
+#include "vzdisk.h"
+
 uint8_t fdc_sector[SECSIZE_VZ];
 
 //used in get_sector()
@@ -34,17 +37,22 @@ const uint8_t inversed_sec_interleave[SEC_NUM] PROGMEM = {0, 3, 6, 9, 12, 15, 2,
 /*40 tracks, 8 bytes/track packed*/
 int8_t sec_lut[TRK_NUM][SEC_NUM/2] = { 0 };
 
-#include "vzdisk.h"
-
 vzdisk::vzdisk()
 {
   if (!SD.begin(SD_CS_PIN))
   {
     serial_log(PSTR("Failed to begin on SD"));
+    sdInitialized = false;
   }
   else {
     sdInitialized = true;
-  }  
+  }
+
+  current_offset = 0;
+  current_track = 0;
+  current_cur = 0;
+  padding = 0;
+  dsk_mounted = false;
 }
 
 vzdisk::~vzdisk()
@@ -308,31 +316,94 @@ void vzdisk::reconstruct_sector()
 {
   
 }
-//
-//int vzdisk::get_sector1(uint8_t TR, uint8_t SEC)
-//{
-//  int result = -1;
-//  uint8_t buf[SECSIZE_VZ+5];
-//
-//  unsigned long tr_offset = (unsigned long)TR*(SEC_NUM*sizeof(sector_t)+padding);
-//  file.seek(tr_offset);
-//  unsigned long current_pos = file.position();  //
-//
-//  uint8_t cursor=0;
-//  file.read(buf, sizeof(buf));
-//  if (buf[0] == 0x80 && buf[1] == 0x80 && buf[2] == 0x80 && buf[3] == 0x80 && buf[4] == 0x80) {
-//    //I think this is a sector header
-//    if (buf[5] == 0x80 && buf[6] == 0x00) {
-//      cursor += 7;
-//    } else if (buf[5] == 0x00) {
-//      cursor += 6;
-//    }
-//
-//    if (buf[cursor] == 0xFE && buf[cursor+1] == 0xE7 && buf[cursor+2] == 0x18 && buf[cursor+3] == 0xC3) {
-//      cursor += 4;
-//      serial_log(PSTR("TR: %d, SEC:%d, Checksum:%02xH\r\n"),buf[cursor], buf[cursor+1], buf[cursor+2]);
-//    }
-//  }
-//
-//  return result;
-//}
+
+bool vzdisk::get_sector1(uint8_t TR, uint8_t SEC, bool v)
+{
+  bool result = false;
+  uint8_t buf[SECSIZE_VZ+5];    //TODO: use dynamic memory
+
+  //TESTING: if requesting a sector from another track, change current_offset to begining of the requested track
+  if (TR != current_track) {
+    current_offset = get_track_offset(TR);
+    current_track = TR;
+    current_cur = 0;
+  }
+
+  while(true) {
+    //TODO: break if have scanned the entire track for 3x times
+    
+    //if at the end of a track or the file, go back to beginning of the track
+    if (0==file.available() || current_cur >= get_track_offset(1)) {
+      current_offset = get_track_offset(current_track);
+      current_cur = 0;
+    }
+ 
+    if (v) {
+      serial_log(PSTR("\rcurrent_offset=%08lX, current_cur=%d, seek_to=%08lX"), current_offset, current_cur, current_offset+current_cur);
+    }
+    file.seek(current_offset + current_cur);
+    file.read(buf, sizeof(buf));
+            
+    int cur = 0;
+    int ngap1 = 0;
+
+    while(buf[cur] != 0x00) {
+      if (buf[cur] == 0x80)
+        ngap1++;
+      cur++;
+      if (cur>=SECSIZE_VZ)
+        break;
+    }
+    if (cur>=SECSIZE_VZ) {
+      serial_log(PSTR("Err1, seeded to :%08lX\r\n"), (current_offset+current_cur));
+    }
+    
+    if (ngap1 >= 5 && buf[cur] == 0x00 && buf[cur+1] == 0xFE && buf[cur+2] == 0xE7 && buf[cur+3] == 0x18 && buf[cur+4] == 0xC3) {
+        unsigned long idam = current_offset+current_cur+cur+1;
+        cur += 5;
+  
+        uint8_t tr = buf[cur++];
+        uint8_t sec = buf[cur++];
+        uint8_t ts = buf[cur++];
+        assert( ts==tr+sec );
+
+        int ngap2 = 0;
+        while(buf[cur] != 0x00) {
+          if (buf[cur] == 0x80)
+            ngap2++;
+          cur++;
+        }
+        assert(ngap2 >= 4 && buf[cur] == 0x00 && buf[cur+1] == 0xC3 && buf[cur+2] == 0x18 && buf[cur+3] == 0xE7 && buf[cur+4] == 0xFE);
+        cur+=5;
+
+        if (tr == TR && pgm_read_byte_near(&inversed_sec_interleave[sec]) == SEC) {
+          if (v) {
+            serial_log(PSTR("\r\nfound idam -> TR: %d, SEC:%d, T+S:%d @ %08lX\r\n"),tr, sec, ts, idam);
+          }
+          
+          //data part
+          uint16_t checksum = 0;
+          for(int i=0; i<SEC_DATA_SIZE+2 /*TODO:remove when next tr, sec removed from sector struct*/; i++) {
+            checksum += buf[cur++];
+          }
+          uint16_t checksum_exp = buf[cur++] + 256*buf[cur++];
+          if (checksum != checksum_exp) {
+            serial_log(PSTR("\r\nCalculated checksum:%04X, expected: %04X\r\n"), checksum, checksum_exp);
+          }
+          //real real checksum
+          assert(checksum == checksum_exp);
+          current_cur += cur; //TODO: should add '(sizeof(sec_hdr_t) + SEC_DATA_SIZE + 2 + 2', let's wait till memcpy is done
+          result = true;
+          break;
+        }
+        else {
+          /*Maybe a little conservertive? not moving forware so many?*/
+          current_cur += (sizeof(sec_hdr_t) + SEC_DATA_SIZE + 2/*TODO: next tr, sec*/ + 2/*of 2 bytes checksum */);
+          continue;
+        }
+     }
+    current_cur ++; //TODO: maybe + nsync is better
+  }
+
+  return result;
+}

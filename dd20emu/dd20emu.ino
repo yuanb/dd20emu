@@ -32,6 +32,8 @@
  *        
  * 3. Write Protect
  */
+#define __ASSERT_USE_STDERR
+#include <assert.h>
 
 #include <SPI.h>
 #include "SdFat.h"
