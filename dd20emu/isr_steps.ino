@@ -43,29 +43,29 @@ void handle_steps() {
   uint8_t data = PIN_STEP_REG & 0x0F;
 
   //Track--, if current bit is shifted to right by 1, wrapped by 4 bits
-  if (data == STEP0 && PHI1(vtech1_fdc_latch) ||
-      data == STEP1 && PHI2(vtech1_fdc_latch) ||
-      data == STEP2 && PHI3(vtech1_fdc_latch) ||
-      data == STEP3 && PHI0(vtech1_fdc_latch))
-  /*if ( (PHI0(data) && !(PHI1(data) || PHI2(data) || PHI3(data)) && PHI1(vtech1_fdc_latch)) ||
+//  if (data == STEP0 && PHI1(vtech1_fdc_latch) ||
+//      data == STEP1 && PHI2(vtech1_fdc_latch) ||
+//      data == STEP2 && PHI3(vtech1_fdc_latch) ||
+//      data == STEP3 && PHI0(vtech1_fdc_latch))
+  if ( (PHI0(data) && !(PHI1(data) || PHI2(data) || PHI3(data)) && PHI1(vtech1_fdc_latch)) ||
        (PHI1(data) && !(PHI0(data) || PHI2(data) || PHI3(data)) && PHI2(vtech1_fdc_latch)) ||
        (PHI2(data) && !(PHI0(data) || PHI1(data) || PHI3(data)) && PHI3(vtech1_fdc_latch)) ||
-       (PHI3(data) && !(PHI0(data) || PHI1(data) || PHI2(data)) && PHI0(vtech1_fdc_latch)) )*/
+       (PHI3(data) && !(PHI0(data) || PHI1(data) || PHI2(data)) && PHI0(vtech1_fdc_latch)) )
   {
     //serial_log(PSTR("Trk-- : %d%d%d%d Latch: %d%d%d%d\r\n"),PHI0(data),PHI1(data),PHI2(data),PHI3(data),    PHI0(vtech1_fdc_latch), PHI1(vtech1_fdc_latch), PHI2(vtech1_fdc_latch), PHI3(vtech1_fdc_latch));
     if (vtech1_track_x2 > 0)
       vtech1_track_x2--;
   }
   //Track++, if current bit is shifted to left by 1, wrapped by 4 bits
-  else if (
-    data == STEP0 && PHI3(vtech1_fdc_latch) ||
-    data == STEP1 && PHI0(vtech1_fdc_latch) ||
-    data == STEP2 && PHI1(vtech1_fdc_latch) ||
-    data == STEP3 && PHI2(vtech1_fdc_latch))
-  /*else if ( (PHI0(data) && !(PHI1(data) || PHI2(data) || PHI3(data)) && PHI3(vtech1_fdc_latch)) ||
+//  else if (
+//    data == STEP0 && PHI3(vtech1_fdc_latch) ||
+//    data == STEP1 && PHI0(vtech1_fdc_latch) ||
+//    data == STEP2 && PHI1(vtech1_fdc_latch) ||
+//    data == STEP3 && PHI2(vtech1_fdc_latch))
+  else if ( (PHI0(data) && !(PHI1(data) || PHI2(data) || PHI3(data)) && PHI3(vtech1_fdc_latch)) ||
             (PHI1(data) && !(PHI0(data) || PHI2(data) || PHI3(data)) && PHI0(vtech1_fdc_latch)) ||
             (PHI2(data) && !(PHI0(data) || PHI1(data) || PHI3(data)) && PHI1(vtech1_fdc_latch)) ||
-            (PHI3(data) && !(PHI0(data) || PHI1(data) || PHI2(data)) && PHI2(vtech1_fdc_latch)) )*/    
+            (PHI3(data) && !(PHI0(data) || PHI1(data) || PHI2(data)) && PHI2(vtech1_fdc_latch)) )
   {
     //serial_log(PSTR("Trk++ : %d%d%d%d Latch: %d%d%d%d\r\n"),PHI0(data),PHI1(data),PHI2(data),PHI3(data),    PHI0(vtech1_fdc_latch), PHI1(vtech1_fdc_latch), PHI2(vtech1_fdc_latch), PHI3(vtech1_fdc_latch));
     if ( vtech1_track_x2 < 2 * TRK_NUM )

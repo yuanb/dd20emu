@@ -18,7 +18,6 @@
 #include "vzdisk.h"
 #define TEMPBUFFER_SIZE 80
 
-//https://github.com/dhansel/ArduinoFDC/blob/main/ArduinoFDC.ino
 char *read_user_cmd(void *buffer, int buflen)
 {
   char *buf = (char *) buffer;
@@ -53,8 +52,10 @@ void print_help_screen()
   serial_log(PSTR("dir - List current directory\r\n"));
   serial_log(PSTR("mount filename - Mount disk image\r\n"));
   serial_log(PSTR("catalog - Catalog DD20 disk image\r\n"));
-  serial_log(PSTR("dumplut - Dump LUT table\r\n"));
   serial_log(PSTR("dumpsect n s - Dump sector on track n, sector s\r\n"));
+  serial_log(PSTR("trklist - Dump track offsets\r\n"));
+  serial_log(PSTR("sectormap - Dump sector map\r\n"));
+  serial_log(PSTR("scandisk - Scan all sectors from all tracks\r\n"));
   serial_log(PSTR("exit - Exit from shell, resume emulator\r\n"));
 }
 
@@ -103,7 +104,11 @@ void sd_dir()
       if (entry.size() >=98560 && entry.size() <=99200) {
         char filename[FILENAME_MAX];
         entry.getName(filename, FILENAME_MAX);
-        serial_log(PSTR("%s\t%ld\r\n"), filename, entry.size());
+        serial_log(PSTR("%s"), filename);
+//        for(int i=0; i<FILENAME_MAX-strnlen(filename, FILENAME_MAX); i++)
+//          serial_log(PSTR("%c"), ' ');
+          
+        serial_log(PSTR("\t%ld\r\n"), entry.size());
       }
     }
   }  
@@ -131,21 +136,6 @@ void img_catalog()
 
     serial_log(PSTR("\r\n"));
   }
-}
-
-extern int8_t sec_lut[TRK_NUM][SEC_NUM/2];
-void dump_lut()
-{
-  serial_log(PSTR("\r\nsec_lut: '0' means 6x80h+1x00h; '1' mean 5x80h+1x00h \r\n"));
-  for(int i=0; i<TRK_NUM; i++)
-  {
-    serial_log(PSTR("TR:%02d  "),i);
-    for(int j=0; j<SEC_NUM/2; j++)
-    {
-      serial_log(PSTR("%02x "), sec_lut[i][j]);
-    }
-    serial_log(PSTR("\r\n"));
-  }  
 }
 
 void dump_sector(int n, int s)
@@ -180,12 +170,81 @@ void dump_sector(int n, int s)
       serial_log(PSTR("\r\n"));      
     }
 
-    //TODO: add checksum
-    serial_log(PSTR("checksum: %d\r\n"), 0);
     serial_log(PSTR("\r\n"));
   }
 }
 
+void trklist()
+{
+  for(uint8_t i=0; i<TRK_NUM; i++) {
+    serial_log(PSTR("TR:%02d - %08lX\r\n"), i, vzdsk->get_track_offset(i));
+  }  
+}
+
+void sectormap()
+{
+  serial_log(PSTR("Sector map:"));
+  bool found = vzdsk->get_sector(0, 13); //Sector 15 has the sector map table 
+  if (!found) {
+    serial_log(PSTR("\r\nNot found.\r\n"));
+    return;
+  }
+  for(uint8_t i=0; i<78; i++) {
+    if (i%2==0) {
+      serial_log(PSTR("\r\n%02d: "), i/2);
+    }
+    uint8_t value = fdc_sector[sizeof(sec_hdr_t)+i];
+    for(uint8_t j=0; j<8; j++) {
+      if (bitmask[j] & value) {
+        serial_log(PSTR("x "));
+      }
+      else {
+        serial_log(PSTR(". "));
+      }
+    }
+  }
+  serial_log(PSTR("\r\n"));
+}
+void scandisk()
+{
+  serial_log(PSTR("Sequential scanning\r\n"));
+  for(uint8_t i=0; i<TRK_NUM; i++) {
+    for(uint8_t j=0; j<SEC_NUM; j++) {
+      serial_log(PSTR("\rTR:%d, SEC:%d"), i, j);
+      bool found = vzdsk->get_sector(i,j);
+      if (!found) {
+        serial_log(PSTR("\r\nNot found:%d, %d\r\n"), i,j);
+      }
+    }
+  }
+
+  randomSeed(analogRead(0));
+
+  serial_log(PSTR("\r\n100 random track scanning\r\n"));
+  for(int i=0; i<100; i++) {
+    uint8_t tr = random(0, TRK_NUM);
+    for(uint8_t j=0; j<SEC_NUM; j++) {
+      serial_log(PSTR("\r#%03d, TR:%02d, SEC:%02d"), i+1, tr,j);
+      bool found = vzdsk->get_sector(tr,j);
+      if (!found) {
+        serial_log(PSTR("\r\nNot found:TR:%d, SEC:%d\r\n"), tr,j);
+      }
+    }
+  }
+
+  serial_log(PSTR("\r\n200 random sector scanning\r\n"));
+  for(int i=0; i<200; i++) {
+    uint8_t tr = random(0, TRK_NUM);
+    uint8_t sec = random(0, SEC_NUM);
+    serial_log(PSTR("\r#%03d, TR:%02d, SEC:%02d"),i+1, tr,sec);
+    bool found = vzdsk->get_sector(tr, sec);
+    if (!found) {
+        serial_log(PSTR("\r\nNot found:%d, %d\r\n"), tr, sec);     
+    }
+  }
+
+  serial_log(PSTR("\r\nEnd of scandisk\r\n"));
+}
 
 void handle_shell()
 { 
@@ -226,11 +285,6 @@ void handle_shell()
       img_catalog();
     }
 
-    //dumplut
-    else if (strncmp_P(cmd, PSTR("dumplut"), 7)==0) {
-      dump_lut();
-    }
-
     //dumpsect
     else if (strncmp_P(cmd, PSTR("dumpsect "), 9)==0) {
       int n=-1,s=-1;
@@ -239,6 +293,21 @@ void handle_shell()
         dump_sector(n, s);
       } else
         serial_log(PSTR("dumpsect n s\r\n"));
+    }
+
+    //trklist
+    else if (strncmp_P(cmd, PSTR("trklist"), 7)==0) {
+      trklist();
+    }
+
+    //sectormap
+    else if (strncmp_P(cmd, PSTR("sectormap"), 9)==0) {
+      sectormap();  
+    }
+    
+    //scandisk
+    else if (strncmp_P(cmd, PSTR("scandisk"), 8)==0) {
+      scandisk();
     }
 
     //exit

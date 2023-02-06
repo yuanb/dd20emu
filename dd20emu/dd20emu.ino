@@ -24,14 +24,12 @@
  */
 
 /*
- * TODO: 
- * 1. CLI interface
- *        https://www.norwegiancreations.com/2018/02/creating-a-command-line-interface-in-arduinos-serial-monitor/
- *        
- * 2. Write support
- *        
- * 3. Write Protect
+ * TODO:        
+ * 1. Write support      
+ * 2. Write Protect
  */
+#define __ASSERT_USE_STDERR
+#include <assert.h>
 
 #include <SPI.h>
 #include "SdFat.h"
@@ -52,22 +50,7 @@
 /*****************/
 /*  SD FILE      */
 /*****************/
-
-//Disk image format 1, FLOPPY1.DSK and FLOPPY2.DSK
-//Penguin wont load, D1B and VZCAVE wont run. The rest are ok
-//char filename[] = "FLOPPY1.DSK";
-
-//Disk image format 2 (formatted from vzemu), fsize = 99185
-//TODO : "GHOST2" Disk I/O Error, Invalid IDAM on TR 39
-//TODO: use dynamic memory
 char diskimage[FILENAME_MAX] = "HELLO.DSK";
-
-//Disk image format 2(created from empty file from vzemu)
-//char filename[] = "20201016.DSK";
-
-//Disk image format 2?
-//char filename[] ="extbasic.dsk";
-
 vzdisk *vzdsk = NULL;
   
 void setup() {

@@ -17,14 +17,14 @@
 */
 
 //Tested values
-//FM encoded 0 : ___n__________n___ : 1.083us + 31.75us
-//FM encoded 1 : ___n___n______n___ : 1.083us + 11 us + 1.083us + 20 us + 1.083us
+//FM encoded 0 : ___n__________n___ : 1us + 31.2us + 1us (next bit)
+//FM encoded 1 : ___n___n______n___ : 1us + 11 us + 1us + 19.2 us + 1us (next bit)
 
 
 #define delay_1us   __builtin_avr_delay_cycles (15)
 #define delay_11us  __builtin_avr_delay_cycles (170)
-#define delay_20us  __builtin_avr_delay_cycles (298)
-#define delay_31_2us  __builtin_avr_delay_cycles (488)
+#define delay_20us  __builtin_avr_delay_cycles (294)
+#define delay_31_2us  __builtin_avr_delay_cycles (482)
 #define pulse_1us   RD_HIGH; delay_1us; RD_LOW
 
 #define RD_DATA_MASK   (1<<RD_DATA_BIT)
@@ -42,19 +42,28 @@
 
 #define FM_OUTPUT_BIT(v,m) { pulse_1us; FM_ENCODE_BIT(v,m); }
 
+uint8_t bitmask[8] = {
+  0b10000000,
+  0b01000000,
+  0b00100000,
+  0b00010000,
+  0b00001000,
+  0b00000100,
+  0b00000010,
+  0b00000001
+};
+
 /*
  * Soft SPI, Most Significant Bit (MSB) first
  */
-inline void put_byte(uint8_t v)
+inline uint8_t put_byte(uint8_t v)
 {
-  FM_OUTPUT_BIT(v,0b10000000);
-  FM_OUTPUT_BIT(v,0b01000000);
-  FM_OUTPUT_BIT(v,0b00100000);
-  FM_OUTPUT_BIT(v,0b00010000);
-  FM_OUTPUT_BIT(v,0b00001000);
-  FM_OUTPUT_BIT(v,0b00000100);
-  FM_OUTPUT_BIT(v,0b00000010);
-  FM_OUTPUT_BIT(v,0b00000001);
+  uint8_t i;
+  for(i=0; i<8 & !write_request; i++) {
+    FM_OUTPUT_BIT(v, bitmask[i]);
+  }
+
+  return i;
 }
 
 uint8_t current_sector = 0;
@@ -70,22 +79,24 @@ extern uint8_t fdc_sector[SECSIZE_VZ];
 extern vzdisk* vzdsk;
 inline void put_sector(uint8_t n, uint8_t s)
 {
-  if (vzdsk && vzdsk->get_sector(n, s) != -1)
+  if (vzdsk && vzdsk->get_sector(n, s))
   {
-    //In theory, this should speed up disk read a bit
-    //Track has changed while reading sector from SD, skip playing back
+    //If current track has changed
     if (n != vtech1_track_x2/2)
       return;
 
+    bool closing_bit = true;
     for(int j=0; j < SECSIZE_VZ; j++)
     {
-      byte v = (byte *)fdc_sector[j];
-      if (!write_request)
-        put_byte(v);
-      else
-        serial_log(PSTR("\r\nWrite request raised at #%d bytes after sector reading.\r\n"), j-1);
+      if (put_byte(fdc_sector[j]) != 8) {
+        closing_bit = false;
+        break;
+      }
     }
-    //last byte of the sector, closing pulse
-    pulse_1us;
+
+    if (closing_bit) {
+      //last byte of the sector, closing pulse
+      pulse_1us;
+    }
   }
 }
