@@ -24,13 +24,9 @@
  */
 
 /*
- * TODO: 
- * 1. CLI interface
- *        https://www.norwegiancreations.com/2018/02/creating-a-command-line-interface-in-arduinos-serial-monitor/
- *        
- * 2. Write support
- *        
- * 3. Write Protect
+ * TODO:        
+ * 1. Write support      
+ * 2. Write Protect
  */
 #define __ASSERT_USE_STDERR
 #include <assert.h>
@@ -54,11 +50,6 @@
 /*****************/
 /*  SD FILE      */
 /*****************/
-
-//Disk image format 1, FLOPPY1.DSK and FLOPPY2.DSK
-//Penguin wont load, D1B and VZCAVE wont run. The rest are ok
-//char filename[] = "FLOPPY1.DSK";
-
 char diskimage[FILENAME_MAX] = "HELLO.DSK";
 vzdisk *vzdsk = NULL;
   

@@ -6,6 +6,11 @@ A few DD20 disk images
 Sector interlace  0, 11, 6, 1, 12, 7, 2, 13, 8, 3, 14, 9, 4, 15, 10, 5  
 
 ### Format 1  
+
+//Disk image format 1, FLOPPY1.DSK and FLOPPY2.DSK
+//Penguin wont load, D1B and VZCAVE wont run. The rest are ok
+//char filename[] = "FLOPPY1.DSK";
+
 floppy1.dsk, floppy2.dsk, 98,560 bytes  
 
 Sector length:  
