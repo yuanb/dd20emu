@@ -58,14 +58,6 @@ uint8_t bitmask[8] = {
  */
 inline uint8_t put_byte(uint8_t v)
 {
-//  FM_OUTPUT_BIT(v,0b10000000);
-//  FM_OUTPUT_BIT(v,0b01000000);
-//  FM_OUTPUT_BIT(v,0b00100000);
-//  FM_OUTPUT_BIT(v,0b00010000);
-//  FM_OUTPUT_BIT(v,0b00001000);
-//  FM_OUTPUT_BIT(v,0b00000100);
-//  FM_OUTPUT_BIT(v,0b00000010);
-//  FM_OUTPUT_BIT(v,0b00000001);
   uint8_t i;
   for(i=0; i<8 & !write_request; i++) {
     FM_OUTPUT_BIT(v, bitmask[i]);
@@ -87,10 +79,9 @@ extern uint8_t fdc_sector[SECSIZE_VZ];
 extern vzdisk* vzdsk;
 inline void put_sector(uint8_t n, uint8_t s)
 {
-  if (vzdsk && vzdsk->get_sector1(n, s) != -1)
+  if (vzdsk && vzdsk->get_sector(n, s))
   {
-    //In theory, this should speed up disk read a bit
-    //Track has changed while reading sector from SD, skip playing back
+    //If current track has changed
     if (n != vtech1_track_x2/2)
       return;
 
@@ -101,8 +92,6 @@ inline void put_sector(uint8_t n, uint8_t s)
         closing_bit = false;
         break;
       }
-//      else
-//        serial_log(PSTR("\r\nWrite request raised at #%d bytes after sector reading.\r\n"), j-1);
     }
 
     if (closing_bit) {
