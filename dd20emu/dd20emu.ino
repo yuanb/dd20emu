@@ -25,8 +25,7 @@
 
 /*
  * TODO:        
- * 1. Write support      
- * 2. Write Protect
+ * 1. Write support
  */
 #define __ASSERT_USE_STDERR
 #include <assert.h>
@@ -65,6 +64,9 @@ void setup() {
   // put your setup code here, to run once:
   // set the digital pin as output:
   pinMode(LED_BUILTIN, OUTPUT);
+
+  pinMode(wrProtPin, OUTPUT);
+  digitalWrite(wrProtPin, HIGH);
 
   pinMode(enDrvPin, INPUT_PULLUP);
   pinMode(rdDataPin, OUTPUT);
