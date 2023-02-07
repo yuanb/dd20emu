@@ -40,6 +40,8 @@
 /*
  * Pin definitions, Arduino Uno
  * GND
+ * 7,  PD7,    Emulator enable
+ * 6,  PD6,    WR PROT
  * 5,  PD5,    WR Data
  * 4,  PD4,    RD Data
  * 3,  PD3,    /WRReq
@@ -49,6 +51,11 @@
  * A1, PC1,    Step1
  * A0, PC0,    Step0
 */
+
+/* Port and bit for Emu EN */
+#define PORT_EMUEN    PINH
+#define EMUEN_DATA_BIT 7
+const byte emuEnPin = 7;
 
 /* Port and bit for WR PROT */
 #define PORT_WRPROT   PIND   //used in dd20emu.ino
@@ -91,7 +98,9 @@ const byte stepPin0  = A0;
 /*
    Pin definitions, Arduino Mega2560
    GND
-   5,   PE3     WR Data
+   7,   PH4,    Emulator enable
+   6,   PH3,    WR PROT
+   5,   PE3,    WR Data
    4 ,  PG5,    RD Data
    3,   PE5,    /EnDrv
    2,   PE4,    /WRReq
@@ -100,6 +109,11 @@ const byte stepPin0  = A0;
    20,  PD1,    Step1
    21,  PD0,    Step0  
 */
+
+/* Port and bit for Emu EN */
+#define PORT_EMUEN    PINH
+#define EMUEN_DATA_BIT 4
+const byte emuEnPin = 7;
 
 /* Port and bit for WR PROT */
 #define PORT_WRPROT   PINH   //used in dd20emu.ino

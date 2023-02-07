@@ -66,9 +66,15 @@ inline uint8_t put_byte(uint8_t v)
   return i;
 }
 
-uint8_t current_sector = 0;
 void handle_datastream() {
+  static uint8_t current_sector = 0;
+  static bool led = true;
+  
   if (drv_enabled && !write_request) {
+
+    digitalWrite(LED_BUILTIN, led);
+    led = !led;
+    
     put_sector((uint8_t)vtech1_track_x2/2, current_sector);
     if (++current_sector >= SEC_NUM)
       current_sector = 0;      
