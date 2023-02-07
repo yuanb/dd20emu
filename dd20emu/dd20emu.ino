@@ -63,6 +63,7 @@ void setup() {
   // set the digital pin as output:
   pinMode(LED_BUILTIN, OUTPUT);
 
+  pinMode(emuEnPin, INPUT);
   pinMode(wrProtPin, OUTPUT);
   digitalWrite(wrProtPin, HIGH);
 
