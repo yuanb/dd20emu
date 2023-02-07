@@ -26,6 +26,7 @@
 /*
  * TODO:        
  * 1. Write support
+ * 2. Save configurations to EEPROM
  */
 #define __ASSERT_USE_STDERR
 #include <assert.h>
@@ -46,9 +47,6 @@
         13h     Write protection status(read-only)
 */
 
-/*****************/
-/*  SD FILE      */
-/*****************/
 char diskimage[FILENAME_MAX] = "HELLO.DSK";
 vzdisk *vzdsk = NULL;
   
