@@ -49,6 +49,12 @@
  * A1, PC1,    Step1
  * A0, PC0,    Step0
 */
+
+/* Port and bit for WR PROT */
+#define PORT_WRPROT   PIND   //used in dd20emu.ino
+#define WP_DATA_BIT 6
+const byte wrProtPin = 6;
+
 /* Port and bit for RDDATA */
 #define PORT_RDDATA   PORTD   //rddata.ino
 #define RD_DATA_BIT 4
@@ -94,6 +100,11 @@ const byte stepPin0  = A0;
    20,  PD1,    Step1
    21,  PD0,    Step0  
 */
+
+/* Port and bit for WR PROT */
+#define PORT_WRPROT   PINH   //used in dd20emu.ino
+#define WP_DATA_BIT 3
+const byte wrProtPin = 6;
 
 /* Port and bit for RDDATA */
 #define PORT_RDDATA   PORTG   //rddata.ino
