@@ -21,6 +21,7 @@ Todo list:
 2023-02-05
 * Added serial terminal (Thanks https://github.com/dhansel/ArduinoFDC)
 * Replaced LUT sector sync algorithm with a better one.
+* Write protection
 
 2022-02-14
 Known issues:
