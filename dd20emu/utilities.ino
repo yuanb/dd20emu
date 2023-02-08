@@ -24,10 +24,11 @@
  */
 bool old_drv_enabled = -1; 
 inline void handle_drive_enable() {
-  bool isEnabled = drv_enabled;
-  if (isEnabled != old_drv_enabled) {
-    digitalWrite(LED_BUILTIN, isEnabled);
-    old_drv_enabled = isEnabled;
+  digitalWrite(wrProtPin, drv_enabled);
+    
+  if (drv_enabled != old_drv_enabled) {
+    digitalWrite(LED_BUILTIN, drv_enabled);
+    old_drv_enabled = drv_enabled;
   }
 }
 
