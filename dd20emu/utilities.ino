@@ -22,10 +22,9 @@
  * LED visual when Drive is enabled
  * Low is enabled, power led when main unit is turned off
  */
-bool old_drv_enabled = -1; 
+
 inline void handle_drive_enable() {
-  digitalWrite(wrProtPin, drv_enabled);
-    
+  static bool old_drv_enabled = -1;
   if (drv_enabled != old_drv_enabled) {
     digitalWrite(LED_BUILTIN, drv_enabled);
     old_drv_enabled = drv_enabled;
