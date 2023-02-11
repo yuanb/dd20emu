@@ -62,10 +62,14 @@ void setup() {
   // put your setup code here, to run once:
   // set the digital pin as output:
   pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(wrLedPin, OUTPUT);
+  digitalWrite(wrLedPin, LOW);
 
   pinMode(emuEnPin, INPUT);
+
   pinMode(wrProtPin, OUTPUT);
-  digitalWrite(wrProtPin, HIGH);
+  digitalWrite(wrProtPin, HIGH);  //Write protected, it seems wr prot can only be disabled if this line is physically grounded,
+                                  //setting the pin to high/low has no effect???
 
   pinMode(enDrvPin, INPUT_PULLUP);
   pinMode(rdDataPin, OUTPUT);
