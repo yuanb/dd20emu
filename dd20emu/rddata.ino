@@ -56,14 +56,18 @@ uint8_t bitmask[8] = {
 /*
  * Soft SPI, Most Significant Bit (MSB) first
  */
-inline uint8_t put_byte(uint8_t v)
+inline bool put_byte(uint8_t v)
 {
   uint8_t i;
-  for(i=0; i<8 & !write_request; i++) {
-    FM_OUTPUT_BIT(v, bitmask[i]);
+  for(i=0; i<8; i++) {
+    if (!write_request) {
+      FM_OUTPUT_BIT(v, bitmask[i]);
+    }
+    else
+      return false;
   }
 
-  return i;
+  return true;
 }
 
 void handle_datastream() {
@@ -76,6 +80,7 @@ void handle_datastream() {
     led = !led;
     
     put_sector((uint8_t)vtech1_track_x2/2, current_sector);
+    
     if (++current_sector >= SEC_NUM)
       current_sector = 0;      
   }
@@ -83,7 +88,7 @@ void handle_datastream() {
 
 extern uint8_t fdc_sector[SECSIZE_VZ];
 extern vzdisk* vzdsk;
-inline void put_sector(uint8_t n, uint8_t s)
+inline bool put_sector(uint8_t n, uint8_t s)
 {
   if (vzdsk && vzdsk->get_sector(n, s))
   {
@@ -91,18 +96,16 @@ inline void put_sector(uint8_t n, uint8_t s)
     if (n != vtech1_track_x2/2)
       return;
 
-    bool closing_bit = true;
     for(int j=0; j < SECSIZE_VZ; j++)
     {
-      if (put_byte(fdc_sector[j]) != 8) {
-        closing_bit = false;
-        break;
+      if (!put_byte(fdc_sector[j])) {
+        return false;
       }
     }
 
-    if (closing_bit) {
-      //last byte of the sector, closing pulse
-      pulse_1us;
-    }
+    return true;
   }
+
+  serial_log(PSTR("failed on reading sector TR: %d, :SEC: %d"), n, s);
+  return false;
 }

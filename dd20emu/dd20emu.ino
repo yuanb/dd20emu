@@ -96,9 +96,5 @@ void setup() {
 
 void loop() {
   handle_datastream();
-
-  int i = Serial.read();
-  if (i==0x0d || i==0x0a) {
-    handle_shell();
-  }
+  handle_shell();
 }

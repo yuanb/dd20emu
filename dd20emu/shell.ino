@@ -62,7 +62,7 @@ void print_help_screen()
 
 void print_status()
 {
-  serial_log(PSTR("\r\nVTech DD20 emulator, v0.0.a, 01/30/2023\r\n"));
+  serial_log(PSTR("\r\nVTech DD20 emulator, v0.0.b, 02/12/2023\r\n"));
   serial_log(PSTR("\r\nSector size: %d bytes"), sizeof(sector_t));
   serial_log(PSTR("\r\nSector header size: %d bytes\r\n"), sizeof(sec_hdr_t));
   
@@ -271,7 +271,13 @@ void scandisk()
 }
 
 void handle_shell()
-{ 
+{
+
+  int i = Serial.read();
+  if (i!=0x0d && i!=0x0a) {
+    return;
+  }
+  
   bool in_shell = true;
   byte *tempbuffer = new byte(TEMPBUFFER_SIZE);
 
