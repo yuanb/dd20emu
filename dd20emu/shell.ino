@@ -31,7 +31,7 @@ char *read_user_cmd(void *buffer, int buflen)
         { Serial.println(); break; }
       else if( i==27 )
         { l=0; Serial.println(); break; }
-      else if( i==8 )
+      else if( i==8 || i==0x7f)
         { 
           if( l>0 )
             { Serial.write(8); Serial.write(' '); Serial.write(8); l--; }
