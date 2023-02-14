@@ -37,8 +37,6 @@
 #include "dd20emu_acl.h"
 #include "vzdisk.h"
 
-#define FILENAME_MAX  80
-
 /*
  * Laser 310 I/O port
    Port 10h     Latch(write-only)
@@ -47,9 +45,12 @@
         13h     Write protection status(read-only)
 */
 
+#define FILENAME_MAX  80
 char diskimage[FILENAME_MAX] = "HELLO.DSK";
 vzdisk *vzdsk = NULL;
-  
+
+bool write_protect = true;
+
 void setup() {
   Serial.begin(9600);
   while (!Serial) {
@@ -68,8 +69,7 @@ void setup() {
   pinMode(emuEnPin, INPUT);
 
   pinMode(wrProtPin, OUTPUT);
-  digitalWrite(wrProtPin, HIGH);  //Write protected, it seems wr prot can only be disabled if this line is physically grounded,
-                                  //setting the pin to high/low has no effect???
+  digitalWrite(wrProtPin, write_protect);
 
   pinMode(enDrvPin, INPUT_PULLUP);
   pinMode(rdDataPin, OUTPUT);

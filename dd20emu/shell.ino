@@ -57,6 +57,7 @@ void print_help_screen()
   serial_log(PSTR("trklist - Dump track offsets\r\n"));
   serial_log(PSTR("sectormap - Dump sector map\r\n"));
   serial_log(PSTR("scandisk - Scan all sectors from all tracks\r\n"));
+  serial_log(PSTR("wrprot [1/0]- Enable write protect\r\n"));
   serial_log(PSTR("exit - Exit from shell, resume emulator\r\n"));
 }
 
@@ -75,6 +76,7 @@ void print_status()
   }
   serial_log(PSTR("tracking padding: %d\r\n"), vzdsk->get_track_padding());
   serial_log(PSTR("current track: %d\r\n"), vtech1_track_x2/2);
+  serial_log(PSTR("Write protection: %d\r\n"), write_protect);
   serial_log(PSTR("Free memory: %d bytes\r\n"), freeMemory());
 }
 
@@ -270,6 +272,22 @@ void scandisk()
   serial_log(PSTR("\r\nEnd of scandisk\r\n"));
 }
 
+void wrprot(char* flag)
+{
+  if (flag[0] == '1') {
+    write_protect = true;
+    digitalWrite(wrProtPin, HIGH);
+    serial_log(PSTR("Write protected\r\n"));
+  }
+  else if (flag[0] == '0') {
+    write_protect = false;
+    digitalWrite(wrProtPin, LOW);
+    serial_log(PSTR("Write permitted\r\n"));
+  }
+  else
+    serial_log(PSTR("wrprot 1 or 0\r\n"));
+}
+
 void handle_shell()
 {
 
@@ -338,6 +356,11 @@ void handle_shell()
     //scandisk
     else if (strncmp_P(cmd, PSTR("scandisk"), 8)==0) {
       scandisk();
+    }
+
+    //wrprot [1/0]
+    else if (strncmp_P(cmd, PSTR("wrprot "), 7)==0) {
+      wrprot(cmd+7);
     }
 
     //exit
