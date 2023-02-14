@@ -47,6 +47,16 @@ typedef struct Track {
   sector_t    sector[16];
 } track_t;
 
+typedef struct Catalog_entry {
+  char type;
+  char delimiter;
+  char filename[8];
+  uint8_t tr;
+  uint8_t sec;
+  uint16_t start_addr;
+  uint16_t end_addr;
+} catalog_entry;
+
 class vzdisk {
   public:
     vzdisk();

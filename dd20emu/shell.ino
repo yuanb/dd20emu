@@ -18,6 +18,8 @@
 #include "vzdisk.h"
 #define TEMPBUFFER_SIZE 80
 
+extern const uint8_t inversed_sec_interleave[SEC_NUM];
+
 char *read_user_cmd(void *buffer, int buflen)
 {
   char *buf = (char *) buffer;
@@ -25,12 +27,11 @@ char *read_user_cmd(void *buffer, int buflen)
   do
     {
       int i = Serial.read();
-
       if( (i==13 || i==10) )
         { Serial.println(); break; }
       else if( i==27 )
         { l=0; Serial.println(); break; }
-      else if( i==8 )
+      else if( i==8 || i==0x7f)
         { 
           if( l>0 )
             { Serial.write(8); Serial.write(' '); Serial.write(8); l--; }
@@ -56,12 +57,13 @@ void print_help_screen()
   serial_log(PSTR("trklist - Dump track offsets\r\n"));
   serial_log(PSTR("sectormap - Dump sector map\r\n"));
   serial_log(PSTR("scandisk - Scan all sectors from all tracks\r\n"));
+  serial_log(PSTR("wrprot [1/0]- Enable write protect\r\n"));
   serial_log(PSTR("exit - Exit from shell, resume emulator\r\n"));
 }
 
 void print_status()
 {
-  serial_log(PSTR("\r\nVTech DD20 emulator, v0.0.a, 01/30/2023\r\n"));
+  serial_log(PSTR("\r\nVTech DD20 emulator, v0.0.b, 02/12/2023\r\n"));
   serial_log(PSTR("\r\nSector size: %d bytes"), sizeof(sector_t));
   serial_log(PSTR("\r\nSector header size: %d bytes\r\n"), sizeof(sec_hdr_t));
   
@@ -74,6 +76,7 @@ void print_status()
   }
   serial_log(PSTR("tracking padding: %d\r\n"), vzdsk->get_track_padding());
   serial_log(PSTR("current track: %d\r\n"), vtech1_track_x2/2);
+  serial_log(PSTR("Write protection: %d\r\n"), write_protect);
   serial_log(PSTR("Free memory: %d bytes\r\n"), freeMemory());
 }
 
@@ -127,6 +130,29 @@ void mount_image(char* filename)
 
 void img_catalog()
 {
+  /* DVZ VZ300 DOS FLOPPY FORMAT.doc is not accurate */
+  /* the last 2 bytes of file entry is end addr, not file size */
+  
+  serial_log(PSTR("T  Name         TR SC Start  End\r\n"));
+  serial_log(PSTR("--------------------------------\r\n"));
+  for(uint8_t i=0; i<15; i++) {
+    bool found = vzdsk->get_sector(0, pgm_read_byte_near(&inversed_sec_interleave[i]));
+
+    if (found) {
+      uint8_t* data_ptr = ((sector_t*)fdc_sector)->data_bytes;
+      for(uint8_t j=0; j<8; j++) {
+        catalog_entry* entry_ptr = (catalog_entry*)(data_ptr + j*16);
+        if (entry_ptr->type == 0)
+          return;
+        serial_log(PSTR("%c  "), entry_ptr->type);
+        for(uint8_t k=0; k<sizeof(entry_ptr->filename); k++) {
+          serial_log(PSTR("%c"), entry_ptr->filename[k]);
+        }
+        serial_log(PSTR("\t%02d %02d %04X   %04X\r\n"), entry_ptr->tr, entry_ptr->sec, entry_ptr->start_addr, entry_ptr->end_addr);
+      }
+    }
+  }
+  
   if (vzdsk->get_sector(0,0)) {
     sector_t *sector_ptr = (sector_t *)fdc_sector;
     uint8_t *data_ptr = sector_ptr->data_bytes;
@@ -184,7 +210,7 @@ void trklist()
 void sectormap()
 {
   serial_log(PSTR("Sector map:"));
-  bool found = vzdsk->get_sector(0, 13); //Sector 15 has the sector map table 
+  bool found = vzdsk->get_sector(0, pgm_read_byte_near(&inversed_sec_interleave[15]) ); //Sector 15 has the sector map table 
   if (!found) {
     serial_log(PSTR("\r\nNot found.\r\n"));
     return;
@@ -246,8 +272,30 @@ void scandisk()
   serial_log(PSTR("\r\nEnd of scandisk\r\n"));
 }
 
+void wrprot(char* flag)
+{
+  if (flag[0] == '1') {
+    write_protect = true;
+    digitalWrite(wrProtPin, HIGH);
+    serial_log(PSTR("Write protected\r\n"));
+  }
+  else if (flag[0] == '0') {
+    write_protect = false;
+    digitalWrite(wrProtPin, LOW);
+    serial_log(PSTR("Write permitted\r\n"));
+  }
+  else
+    serial_log(PSTR("wrprot 1 or 0\r\n"));
+}
+
 void handle_shell()
-{ 
+{
+
+  int i = Serial.read();
+  if (i!=0x0d && i!=0x0a) {
+    return;
+  }
+  
   bool in_shell = true;
   byte *tempbuffer = new byte(TEMPBUFFER_SIZE);
 
@@ -308,6 +356,11 @@ void handle_shell()
     //scandisk
     else if (strncmp_P(cmd, PSTR("scandisk"), 8)==0) {
       scandisk();
+    }
+
+    //wrprot [1/0]
+    else if (strncmp_P(cmd, PSTR("wrprot "), 7)==0) {
+      wrprot(cmd+7);
     }
 
     //exit

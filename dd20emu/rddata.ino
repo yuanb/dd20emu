@@ -20,27 +20,27 @@
 //FM encoded 0 : ___n__________n___ : 1us + 31.2us + 1us (next bit)
 //FM encoded 1 : ___n___n______n___ : 1us + 11 us + 1us + 19.2 us + 1us (next bit)
 
+#define _delayNanoseconds(__ns)     __builtin_avr_delay_cycles( (double)(F_CPU)*((double)__ns)/1.0e9 /*+ 0.5 */)
 
-#define delay_1us   __builtin_avr_delay_cycles (15)
-#define delay_11us  __builtin_avr_delay_cycles (170)
-#define delay_20us  __builtin_avr_delay_cycles (294)
-#define delay_31_2us  __builtin_avr_delay_cycles (482)
+#define delay_1us     _delayNanoseconds(1000)
+#define delay_11us    _delayNanoseconds(11000)
+#define delay_19_2us  _delayNanoseconds(19200)
+#define delay_31_2us  _delayNanoseconds(31200)
 #define pulse_1us   RD_HIGH; delay_1us; RD_LOW
 
 #define RD_DATA_MASK   (1<<RD_DATA_BIT)
 #define RD_HIGH   PORT_RDDATA |= RD_DATA_MASK;
 #define RD_LOW    PORT_RDDATA &= ~RD_DATA_MASK;
 
-#define WR_DATA_MASK   (1<<WR_DATA_BIT)
-#define WR_HIGH    PORT_WRDATA & WR_DATA_BIT
-
-
-#define FM_BIT_1  delay_11us; pulse_1us; delay_20us;
+#define FM_BIT_1  delay_11us; pulse_1us; delay_19_2us;
 #define FM_BIT_0  delay_31_2us;
 
 #define FM_ENCODE_BIT(v,m) {  if (v & m) { FM_BIT_1; } else { FM_BIT_0; } }
 
 #define FM_OUTPUT_BIT(v,m) { pulse_1us; FM_ENCODE_BIT(v,m); }
+
+extern uint8_t fdc_sector[SECSIZE_VZ];
+extern vzdisk* vzdsk;
 
 uint8_t bitmask[8] = {
   0b10000000,
@@ -53,56 +53,83 @@ uint8_t bitmask[8] = {
   0b00000001
 };
 
-/*
- * Soft SPI, Most Significant Bit (MSB) first
- */
-inline uint8_t put_byte(uint8_t v)
-{
-  uint8_t i;
-  for(i=0; i<8 & !write_request; i++) {
-    FM_OUTPUT_BIT(v, bitmask[i]);
-  }
-
-  return i;
-}
-
-void handle_datastream() {
+bool handle_datastream() {
   static uint8_t current_sector = 0;
   static bool led = true;
-  
-  if (drv_enabled && !write_request) {
 
-    digitalWrite(LED_BUILTIN, led);
-    led = !led;
+  if (!drv_enabled || write_request || !vzdsk)
+    return false;
+
+  uint8_t tr = vtech1_track_x2/2;
+  if (!vzdsk->get_sector(tr, current_sector)) {
+    serial_log(PSTR("failed on reading sector TR: %d, :SEC: %d"), tr, current_sector);
+    return false;
+  }
     
-    put_sector((uint8_t)vtech1_track_x2/2, current_sector);
-    if (++current_sector >= SEC_NUM)
-      current_sector = 0;      
-  }
-}
+  digitalWrite(LED_BUILTIN, led);
+  led = !led;
 
-extern uint8_t fdc_sector[SECSIZE_VZ];
-extern vzdisk* vzdsk;
-inline void put_sector(uint8_t n, uint8_t s)
-{
-  if (vzdsk && vzdsk->get_sector(n, s))
-  {
-    //If current track has changed
-    if (n != vtech1_track_x2/2)
-      return;
+  for(uint8_t i=0; i< SECSIZE_VZ; i++) {
 
-    bool closing_bit = true;
-    for(int j=0; j < SECSIZE_VZ; j++)
-    {
-      if (put_byte(fdc_sector[j]) != 8) {
-        closing_bit = false;
-        break;
+    for(uint8_t j=0; j<8; j++) {
+      if (write_request) {
+        //tag /WR request
+        digitalWrite(9, HIGH);
+        digitalWrite(9,LOW);
+        return false;
       }
-    }
+      FM_OUTPUT_BIT(fdc_sector[i], bitmask[j]);
 
-    if (closing_bit) {
-      //last byte of the sector, closing pulse
-      pulse_1us;
+
+//      put in dd20emu
+      //tag
+//      pinMode(9, OUTPUT);
+//      digitalWrite(9,LOW);
+//
+//      if (fdc_sector[i] & bitmask[j]) {
+//        //1
+//        pulse_1us;
+//        //delay_11us;
+//        for(uint8_t k=0; k<7; k++) {
+//          if (write_request) {
+//            //tag /WR request
+//            digitalWrite(9, HIGH);
+//            digitalWrite(9,LOW);
+//            return false;
+//          }      
+//          delay_1us;
+//        }
+//        
+//        pulse_1us;
+//        
+//        //delay_20us;
+//        for(uint8_t k=0; k<13; k++) {
+//          if (write_request) {
+//            //tag /WR request
+//            digitalWrite(9, HIGH);
+//            digitalWrite(9,LOW);
+//            return false;
+//          }      
+//          delay_1us;
+//        }
+//      }
+//      else {
+//        //0
+//        pulse_1us;
+//        for(uint8_t k=0; k<20; k++) {
+//          if (write_request) {
+//            //tag /WR request
+//            digitalWrite(9, HIGH);
+//            digitalWrite(9,LOW);
+//            return false;
+//          }
+//          delay_1us;
+//        }
+//      }
     }
   }
+  if (++current_sector >= SEC_NUM)
+    current_sector = 0;
+
+  return true;
 }

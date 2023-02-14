@@ -53,12 +53,17 @@
 */
 
 /* Port and bit for Emu EN */
-#define PORT_EMUEN    PINH
-#define EMUEN_DATA_BIT 7
+#define PORT_EMUEN    PIND
+#define PIN_EMUEN_BIT 7
 const byte emuEnPin = 7;
 
+/* Port and bit for Write LED */
+#define PORT_WRLED    PORTB
+#define WRLED_DATA_BIT  0
+const byte wrLedPin = 8;
+
 /* Port and bit for WR PROT */
-#define PORT_WRPROT   PIND   //used in dd20emu.ino
+#define PORT_WRPROT   PORTD   //used in dd20emu.ino
 #define WP_DATA_BIT 6
 const byte wrProtPin = 6;
 
@@ -112,11 +117,16 @@ const byte stepPin0  = A0;
 
 /* Port and bit for Emu EN */
 #define PORT_EMUEN    PINH
-#define EMUEN_DATA_BIT 4
+#define PIN_EMUEN_BIT 4
 const byte emuEnPin = 7;
 
+/* Port and bit for Write LED */
+#define PORT_WRLED    PORTH
+#define WRLED_DATA_BIT  5
+const byte wrLedPin = 8;
+
 /* Port and bit for WR PROT */
-#define PORT_WRPROT   PINH   //used in dd20emu.ino
+#define PORT_WRPROT   PORTH   //used in dd20emu.ino
 #define WP_DATA_BIT 3
 const byte wrProtPin = 6;
 

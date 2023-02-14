@@ -37,8 +37,6 @@
 #include "dd20emu_acl.h"
 #include "vzdisk.h"
 
-#define FILENAME_MAX  80
-
 /*
  * Laser 310 I/O port
    Port 10h     Latch(write-only)
@@ -47,9 +45,12 @@
         13h     Write protection status(read-only)
 */
 
+#define FILENAME_MAX  80
 char diskimage[FILENAME_MAX] = "HELLO.DSK";
 vzdisk *vzdsk = NULL;
-  
+
+bool write_protect = true;
+
 void setup() {
   Serial.begin(9600);
   while (!Serial) {
@@ -62,10 +63,13 @@ void setup() {
   // put your setup code here, to run once:
   // set the digital pin as output:
   pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(wrLedPin, OUTPUT);
+  digitalWrite(wrLedPin, LOW);
 
   pinMode(emuEnPin, INPUT);
+
   pinMode(wrProtPin, OUTPUT);
-  digitalWrite(wrProtPin, HIGH);
+  digitalWrite(wrProtPin, write_protect);
 
   pinMode(enDrvPin, INPUT_PULLUP);
   pinMode(rdDataPin, OUTPUT);
@@ -92,9 +96,5 @@ void setup() {
 
 void loop() {
   handle_datastream();
-
-  int i = Serial.read();
-  if (i==0x0d || i==0x0a) {
-    handle_shell();
-  }
+  handle_shell();
 }
