@@ -73,9 +73,9 @@ const byte wrProtPin = 6;
 const byte rdDataPin = 4;
 
 /* Port and bit for WRDATA */
-#define PORT_WRDATA   PIND   //used in rddata.ino
-#define WR_DATA_BIT 5
-const byte wrDataPin = 5
+#define PORT_WRDATA   XXX   //used in rddata.ino
+#define WR_DATA_BIT XXX
+const byte wrDataPin = XXX
 
 /* Port and bits for /EnDrv and /WRReq */
 #define PORT_CTL      PIND    //isr.ino
@@ -135,10 +135,10 @@ const byte wrProtPin = 6;
 #define RD_DATA_BIT 5
 const byte rdDataPin = 4;
 
-/* Port and bit for WRDATA */
-#define PORT_WRDATA PINE   //used in rddata.ino
-#define WR_DATA_BIT 3
-const byte wrDataPin = 5;
+/* Port and bit for WRDATA ICP5*/
+#define PORT_WRDATA PINL   //PL1 used in wrdata.ino
+#define WR_DATA_BIT 1
+const byte wrDataPin = 48;
 
 /* Port and bits for /EnDrv and /WRReq */
 #define PORT_CTL      PINE    //isr.ino
