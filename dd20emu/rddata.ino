@@ -73,9 +73,7 @@ bool handle_datastream() {
 
     for(uint8_t j=0; j<8; j++) {
       if (write_request) {
-        //tag /WR request
-        digitalWrite(9, HIGH);
-        digitalWrite(9,LOW);
+        //TIMSK5 |= 0b00100000;    // enable input capture interrupt
         return false;
       }
       FM_OUTPUT_BIT(fdc_sector[i], bitmask[j]);

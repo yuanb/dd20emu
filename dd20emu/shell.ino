@@ -16,6 +16,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 #include "vzdisk.h"
+#include "wrdata.h"
 #define TEMPBUFFER_SIZE 80
 
 extern const uint8_t inversed_sec_interleave[SEC_NUM];
@@ -58,6 +59,7 @@ void print_help_screen()
   serial_log(PSTR("sectormap - Dump sector map\r\n"));
   serial_log(PSTR("scandisk - Scan all sectors from all tracks\r\n"));
   serial_log(PSTR("wrprot [1/0]- Enable write protect\r\n"));
+  serial_log(PSTR("wrbuf - Dump wrdata buf\r\n"));
   serial_log(PSTR("exit - Exit from shell, resume emulator\r\n"));
 }
 
@@ -288,6 +290,19 @@ void wrprot(char* flag)
     serial_log(PSTR("wrprot 1 or 0\r\n"));
 }
 
+extern unsigned int wr_buf[WRBUF_SIZE];
+void wrbuf()
+{
+  for(uint16_t i=0; i < WRBUF_SIZE; i++) {
+    if (i%16 == 0) {
+      serial_log(PSTR("\r\n"));
+    }
+    serial_log(PSTR("%04X "), wr_buf[i]);
+  }
+
+  serial_log(PSTR("\r\n"));
+}
+
 void handle_shell()
 {
 
@@ -361,6 +376,11 @@ void handle_shell()
     //wrprot [1/0]
     else if (strncmp_P(cmd, PSTR("wrprot "), 7)==0) {
       wrprot(cmd+7);
+    }
+
+    //wrbuf
+    else if (strncmp_P(cmd, PSTR("wrbuf"), 5)==0) {
+      wrbuf();
     }
 
     //exit

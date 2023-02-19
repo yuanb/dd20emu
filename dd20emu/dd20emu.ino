@@ -49,7 +49,7 @@
 char diskimage[FILENAME_MAX] = "HELLO.DSK";
 vzdisk *vzdsk = NULL;
 
-bool write_protect = true;
+bool write_protect = false;
 
 void setup() {
   Serial.begin(9600);
@@ -65,6 +65,13 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(wrLedPin, OUTPUT);
   digitalWrite(wrLedPin, LOW);
+  
+  //TODO: debug code for logic analyzer
+  pinMode(icpFollowerPin, OUTPUT);
+  digitalWrite(icpFollowerPin, HIGH);
+  pinMode(icpEnabledPin, OUTPUT);
+  digitalWrite(icpEnabledPin, HIGH);
+  
 
   pinMode(emuEnPin, INPUT);
 
@@ -92,6 +99,7 @@ void setup() {
   attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(stepPin3), handle_steps, CHANGE); 
 
   print_enter_msg();
+  initInputCaptureTimer();
 }
 
 void loop() {
