@@ -73,17 +73,12 @@ bool handle_datastream() {
 
     for(uint8_t j=0; j<8; j++) {
       if (write_request) {
-        //TIMSK5 |= 0b00100000;    // enable input capture interrupt
         return false;
       }
       FM_OUTPUT_BIT(fdc_sector[i], bitmask[j]);
 
 
-//      put in dd20emu
-      //tag
-//      pinMode(9, OUTPUT);
-//      digitalWrite(9,LOW);
-//
+//      TODO: Faster code to stop RDDATA output when /wrreq
 //      if (fdc_sector[i] & bitmask[j]) {
 //        //1
 //        pulse_1us;

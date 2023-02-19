@@ -66,11 +66,12 @@ void setup() {
   pinMode(wrLedPin, OUTPUT);
   digitalWrite(wrLedPin, LOW);
   
-  //TODO: debug code for logic analyzer
+  //DEBUG: debug code for logic analyzer
   pinMode(icpFollowerPin, OUTPUT);
   digitalWrite(icpFollowerPin, HIGH);
   pinMode(icpEnabledPin, OUTPUT);
   digitalWrite(icpEnabledPin, HIGH);
+  //DEBUG: debug code for logic analyzer
   
 
   pinMode(emuEnPin, INPUT);
@@ -99,7 +100,7 @@ void setup() {
   attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(stepPin3), handle_steps, CHANGE); 
 
   print_enter_msg();
-  initInputCaptureTimer();
+  initICPTimer();
 }
 
 void loop() {

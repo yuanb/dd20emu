@@ -39,15 +39,13 @@ void driveEnabled() {
 void writeRequest() {
   write_request = !(PIN_WR_REG & PIN_WRREQ_MASK);
 
-  if (write_request) {
-//    //TIMSK5 |= 0b00100000;    // enable input capture interrupt
-    TIMSK5 |= (1<<ICIE5);
-    PORT_ICPENBL &= ~(1<<ICPENBL_BIT);  //debug 
+  if (write_request) {  
+    TIMSK5 |= (1<<ICIE5);   // enable input capture interrupt
+    PORT_ICPENBL &= ~(1<<_ICPENBL_BIT);  //debug 
   }
-  else {
-//    //TIMSK5 |= 0b00000000;    // disable input capture interrupt 
-    TIMSK5 &= ~(1<<ICIE5);
-    PORT_ICPENBL |= (1<<ICPENBL_BIT); //debug 
+  else { 
+    TIMSK5 &= ~(1<<ICIE5);  // disable input capture interrupt 
+    PORT_ICPENBL |= (1<<_ICPENBL_BIT); //debug 
   }
   
   //Toggle WR led

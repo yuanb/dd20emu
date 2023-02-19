@@ -125,14 +125,14 @@ const byte emuEnPin = 7;
 #define WRLED_DATA_BIT  5
 const byte wrLedPin = 8;
 
-//TODO: debug code for logic analyzer
+//DEBUG: debug code for logic analyzer
 #define PORT_ICPFOLLOWER  PORTH
 #define FOLLOWER_BIT 6
 const byte icpFollowerPin = 9;
 #define PORT_ICPENBL      PORTB
-//Low level =enabled
-#define ICPENBL_BIT  4
+#define _ICPENBL_BIT  4
 const byte icpEnabledPin = 10;
+//DEBUG: debug code for logic analyzer
 
 
 /* Port and bit for WR PROT */

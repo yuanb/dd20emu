@@ -30,7 +30,7 @@
 
 unsigned int wr_buf[WRBUF_SIZE] = {0};
 
-void initInputCaptureTimer()
+void initICPTimer()
 {
   noInterrupts();
   
@@ -46,11 +46,7 @@ void initInputCaptureTimer()
   //0b10000001 - 1/1 prescaler (001) falling edge noise canceler
   TCCRB = 0b10000001;
   
-  TCNT = 0;
-  
-  //TIMSK = bit (ICIE5)
-  //TIMSK |= 0b00100000;    // enable input capture interrupt
-  
+  TCNT = 0;  
   interrupts();
 }
 
