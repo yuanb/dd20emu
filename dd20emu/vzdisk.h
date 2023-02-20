@@ -72,10 +72,7 @@ class vzdisk {
 
     SdFat* get_sd();
     bool get_mounted();
-
-  protected:
-    int get_track(int n);
-
+ 
   private:
     bool sdInitialized;
     bool dsk_mounted;
