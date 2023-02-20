@@ -19,6 +19,7 @@
 #ifndef	_WRDATA_H_
 #define	_WRDATA_H_
 
-#define WRBUF_SIZE  512
+//#define WRBUF_SIZE  1120  // 8*(6+4+, 126+2+2)
+#define WRBUF_SIZE    512
 
 #endif	//_WRDATA_H_

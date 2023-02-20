@@ -18,34 +18,6 @@
 
 #include "utilities.h"
 
-/**
- * LED visual when Drive is enabled
- * Low is enabled, power led when main unit is turned off
- */
-bool old_drv_enabled = -1; 
-inline void handle_drive_enable() {
-  if (drv_enabled != old_drv_enabled) {
-    digitalWrite(LED_BUILTIN, drv_enabled);
-    old_drv_enabled = drv_enabled;
-  }
-}
-
-/**
- * Serial log on R/W request
- * TODO: enable Trk# display -> serial console
- */
-bool old_wr_req = -1;
-void handle_wr_request() {
-  if (!drv_enabled)
-    return;
-
-  bool wrRequest = write_request;
-  if (wrRequest != old_wr_req) {
-    //serial_log(PSTR("Trk: %d, %s"), vtech1_track_x2 / 2, wrRequest ? "Write" : "Read");
-    old_wr_req = wrRequest;
-  }
-}
-
 void serial_log( const char * format, ... )
 {
   char buffer[256];

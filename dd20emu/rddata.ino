@@ -36,13 +36,12 @@
 #define FM_BIT_0  delay_31_2us;
 
 #define FM_ENCODE_BIT(v,m) {  if (v & m) { FM_BIT_1; } else { FM_BIT_0; } }
-
 #define FM_OUTPUT_BIT(v,m) { pulse_1us; FM_ENCODE_BIT(v,m); }
 
 extern uint8_t fdc_sector[SECSIZE_VZ];
 extern vzdisk* vzdsk;
 
-uint8_t bitmask[8] = {
+const uint8_t bitmask[8] = {
   0b10000000,
   0b01000000,
   0b00100000,

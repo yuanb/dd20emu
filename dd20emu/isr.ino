@@ -33,7 +33,11 @@ void driveEnabled() {
   bool emuEn = PORT_EMUEN & PIN_EMUEN_MASK;  //digitalRead(emuEnPin);
   drv_enabled = drv_enabled & emuEn;  
 
-  handle_drive_enable();
+  static bool old_drv_enabled = false;
+  if (drv_enabled != old_drv_enabled) {
+    digitalWrite(LED_BUILTIN, drv_enabled);
+    old_drv_enabled = drv_enabled;
+  }
 }
 
 void writeRequest() {

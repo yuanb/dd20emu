@@ -57,9 +57,6 @@ void setup() {
     ; // wait for serial port to connect. Needed for native USB port only
   }
 
-  serial_log(PSTR("Begin DD-20 emulation\r\n"));
-  print_status();
-
   // put your setup code here, to run once:
   // set the digital pin as output:
   pinMode(LED_BUILTIN, OUTPUT);
@@ -99,7 +96,8 @@ void setup() {
   attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(stepPin2), handle_steps, CHANGE);
   attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(stepPin3), handle_steps, CHANGE); 
 
-  print_enter_msg();
+  print_status();
+  print_enter_shell_msg();
   initICPTimer();
 }
 

@@ -28,7 +28,7 @@
 #define ICNC    ICNC5   //noise canceler
 #define ICES    ICES5   //input capture edge select: 1-rising, 0-falling
 
-unsigned int wr_buf[WRBUF_SIZE] = {0};
+uint8_t wr_buf[WRBUF_SIZE] = {0};
 
 void initICPTimer()
 {
@@ -67,13 +67,15 @@ void initICPTimer()
 
 //https://forum.arduino.cc/t/pwm-input-capture-interrupt/544530/3
 
-volatile unsigned int PulseTime = 0;
+//TODO: why volatile?
+volatile uint16_t PulseTime = 0;
 static uint16_t buf_idx = 0;
 
 ISR(TIMER5_CAPT_vect)
 {
-  static unsigned RisingEdgeTime = 0;
-  static unsigned FallingEdgeTime = 0;
+  static uint16_t RisingEdgeTime = 0;
+  static uint16_t FallingEdgeTime = 0;
+  uint8_t nibble=2;
   
   // Which edge is armed?
   if (TCCRB & (1 << ICES5))
@@ -84,11 +86,13 @@ ISR(TIMER5_CAPT_vect)
     
     // Rising Edge
     RisingEdgeTime = ICR5;
+    PulseTime = RisingEdgeTime - FallingEdgeTime;
+    if (PulseTime <= 0x80)
+      nibble = 1;
+    else if (PulseTime >= 0x200)
+      nibble = 0;
+    
     TCCRB &= ~(1 << ICES5); // Switch to Falling Edge
-    //PulseTime = RisingEdgeTime - FallingEdgeTime;
-
-    //if (buf_idx < sizeof(wr_buf));
-    //  wr_buf[buf_idx++] = RisingEdgeTime - FallingEdgeTime;
   }
   else
   {
@@ -98,10 +102,16 @@ ISR(TIMER5_CAPT_vect)
     
     // Falling Edge
     FallingEdgeTime = ICR5;
+    PulseTime = FallingEdgeTime - RisingEdgeTime;
+    if (PulseTime <= 0x80)
+      nibble = 1;
+    else if (PulseTime >= 0x200)
+      nibble = 2;
+
     TCCRB |= (1 << ICES5); // Switch to Rising Edge
-    //PulseTime = FallingEdgeTime - RisingEdgeTime;
-    
-    //if (buf_idx < sizeof(wr_buf));
-    //  wr_buf[buf_idx++] = FallingEdgeTime - RisingEdgeTime;
+  }
+
+  if (nibble<2 && buf_idx < WRBUF_SIZE) {
+    wr_buf[buf_idx++] = nibble;
   }
 }
