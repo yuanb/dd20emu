@@ -1,32 +1,4 @@
-
-
 #include "wrdata.h"
-
-/* Port and bit for WRDATA ICP5*/
-/* Could also use ICP4 (PL0), which is defined as digital pin 49*/
-//#define PORT_WRDATA PINL   //PL1 used in wrdata.ino
-//#define WR_DATA_BIT 1
-//const byte wrDataPin = 48;
-
-#define TIFR    TIFR5   // timer 5 flag register
-#define TOV     TOV5    // overflow flag
-#define OCF     OCF5A   // output compare flag
-#define ICF     ICF5    // input capture flag
-#define TCCRA   TCCR5A  // timer 5 control register A
-//#define COMA1   COM5A1  // timer 5 output compare mode bit 1
-//#define COMA0   COM5A0  // timer 5 output compare mode bit 0
-#define TCCRB   TCCR5B  // timer 5 control register B
-#define CS2     CS52    // timer 5 clock select bit 2
-#define CS1     CS51    // timer 5 clock select bit 1
-#define CS0     CS50    // timer 5 clock select bit 0
-//#define WGM2    WGM52   // timer 5 waveform mode bit 2
-//#define TCCRC   TCCR5C  // timer 5 control register C
-//#define FOC     FOC5A   // force output compare flag
-//#define OCR     OCR5A   // timer 5 output compare register
-#define TCNT    TCNT5   // timer 5 counter
-#define TIMSK   TIMSK5
-#define ICNC    ICNC5   //noise canceler
-#define ICES    ICES5   //input capture edge select: 1-rising, 0-falling
 
 uint8_t wr_buf[WRBUF_SIZE] = {0};
 
@@ -67,15 +39,14 @@ void initICPTimer()
 
 //https://forum.arduino.cc/t/pwm-input-capture-interrupt/544530/3
 
-//TODO: why volatile?
-volatile uint16_t PulseTime = 0;
 static uint16_t buf_idx = 0;
+static int8_t bit_idx = 7;
+//static uint8_t value = 0;
 
 ISR(TIMER5_CAPT_vect)
 {
-  static uint16_t RisingEdgeTime = 0;
-  static uint16_t FallingEdgeTime = 0;
-  uint8_t nibble=2;
+  TCNT = 0;
+  uint16_t PulseTime = ICR5;
   
   // Which edge is armed?
   if (TCCRB & (1 << ICES5))
@@ -83,15 +54,7 @@ ISR(TIMER5_CAPT_vect)
     //set bit
     PORT_ICPFOLLOWER |= (1<< FOLLOWER_BIT);
 
-    
     // Rising Edge
-    RisingEdgeTime = ICR5;
-    PulseTime = RisingEdgeTime - FallingEdgeTime;
-    if (PulseTime <= 0x80)
-      nibble = 1;
-    else if (PulseTime >= 0x200)
-      nibble = 0;
-    
     TCCRB &= ~(1 << ICES5); // Switch to Falling Edge
   }
   else
@@ -99,19 +62,39 @@ ISR(TIMER5_CAPT_vect)
     //clear bit
     PORT_ICPFOLLOWER &= ~(1<<FOLLOWER_BIT);
 
-    
     // Falling Edge
-    FallingEdgeTime = ICR5;
-    PulseTime = FallingEdgeTime - RisingEdgeTime;
-    if (PulseTime <= 0x80)
-      nibble = 1;
-    else if (PulseTime >= 0x200)
-      nibble = 2;
-
     TCCRB |= (1 << ICES5); // Switch to Rising Edge
   }
 
-  if (nibble<2 && buf_idx < WRBUF_SIZE) {
-    wr_buf[buf_idx++] = nibble;
+  //TODO and last puls was a short one, use a 10% threshold with calculated timer value
+  //observed values:
+  //short pulse 52,54,55,56,57
+  //middle pulse 15F, 160,161,162,
+  //long pulse 1DB, 1DC, 1DE, 1DF
+  
+  //uint8_t nibble;
+  if (0x120<= PulseTime && PulseTime <= 0x166)
+    //nibble = 1;
+    bitSet(wr_buf[buf_idx], bit_idx);
+  else if (0x1D0 <= PulseTime && PulseTime <=0x200 )
+    //nibble = 0;
+    bitClear(wr_buf[buf_idx], bit_idx);
+  else
+    return;
+
+  //value = (value << bit_idx) | nibble;
+
+  //wr_buf[buf_idx] = nibble;
+  //bit_idx = 8;
+  
+  //wr_buf[buf_idx] = value;
+  bit_idx--;
+
+  if (bit_idx < 0) {
+    bit_idx = 7;
+    //value = 0;
+    if (buf_idx < WRBUF_SIZE) {
+      buf_idx++;
+    }
   }
 }

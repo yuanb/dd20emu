@@ -65,7 +65,7 @@ void print_help_screen()
 
 void print_status()
 {
-  serial_log(PSTR("\r\nVTech DD20 emulator, v0.0.b, 02/12/2023\r\n"));
+  serial_log(PSTR("\r\nVTech DD20 emulator, v0.0.c, 02/20/2023\r\n"));
   serial_log(PSTR("\r\nSector size: %d bytes"), sizeof(sector_t));
   serial_log(PSTR("\r\nSector header size: %d bytes\r\n"), sizeof(sec_hdr_t));
   

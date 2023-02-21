@@ -45,6 +45,7 @@ void writeRequest() {
 
   if (write_request) {  
     TIMSK5 |= (1<<ICIE5);   // enable input capture interrupt
+    TCNT5 = 0;
     PORT_ICPENBL &= ~(1<<_ICPENBL_BIT);  //debug 
   }
   else { 
