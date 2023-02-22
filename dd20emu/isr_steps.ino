@@ -18,8 +18,8 @@
 
 #include "vzdisk.h"
 
-uint8_t vtech1_fdc_latch = 0;
-uint8_t vtech1_track_x2 = 0;
+volatile uint8_t vtech1_fdc_latch = 0;
+volatile uint8_t vtech1_track_x2 = 0;
 
 //Used to calculate latch PHI
 #define PHI0(n) (((n)>>PIN_STEP0_BIT)&1)

@@ -23,8 +23,8 @@
 
 #define PIN_EMUEN_MASK  (1<<PIN_EMUEN_BIT)
 
-bool drv_enabled = false;
-bool write_request = false;
+volatile bool drv_enabled = false;
+volatile bool write_request = false;
 
 void driveEnabled() {
   drv_enabled = !(PIN_EN_REG & PIN_EN_MASK);
