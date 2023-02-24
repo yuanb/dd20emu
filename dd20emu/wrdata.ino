@@ -1,7 +1,5 @@
 #include "wrdata.h"
 
-uint8_t wr_buf[WRBUF_SIZE] = {0};
-
 void initICPTimer()
 {
   noInterrupts();
@@ -13,9 +11,9 @@ void initICPTimer()
   //TIFR = bit(ICF) | bit(TOV);
 
   //TCCRB = bit(ICNC) | /*bit(ICES)*/ | bit (CS1);
-  //0b11000010 - 1/8 prescaler (010) rising edge noise canceler
-  //0b11000001 - 1/1 prescaler (001) rising edge noise canceler
-  //0b10000001 - 1/1 prescaler (001) falling edge noise canceler
+  //0b11 000 010 - 1/8 prescaler (010) rising edge noise canceler
+  //0b11 000 001 - 1/1 prescaler (001) rising edge noise canceler
+  //0b10 000 001 - 1/1 prescaler (001) falling edge noise canceler
   TCCRB = 0b10000001;
   
   TCNT = 0;  
@@ -42,6 +40,12 @@ void initICPTimer()
 static uint16_t buf_idx = 0;
 static int8_t bit_idx = 7;
 //static uint8_t value = 0;
+
+#ifdef PULSETIME
+uint16_t wr_buf[WRBUF_SIZE] = {0};
+#else
+uint8_t wr_buf[WRBUF_SIZE] = {0};
+#endif
 
 ISR(TIMER5_CAPT_vect)
 {
@@ -71,7 +75,14 @@ ISR(TIMER5_CAPT_vect)
   //short pulse 52,54,55,56,57
   //middle pulse 15F, 160,161,162,
   //long pulse 1DB, 1DC, 1DE, 1DF
-  
+
+#ifdef  PULSETIME
+    wr_buf[buf_idx] = PulseTime;
+    if (buf_idx < WRBUF_SIZE-1) {
+      buf_idx++;
+    }
+#else
+
   //uint8_t nibble;
   if (0x120<= PulseTime && PulseTime <= 0x166)
     //nibble = 1;
@@ -97,4 +108,5 @@ ISR(TIMER5_CAPT_vect)
       buf_idx++;
     }
   }
+#endif  //PULSETIME
 }

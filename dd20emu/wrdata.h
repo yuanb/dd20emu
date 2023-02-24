@@ -46,6 +46,11 @@
 #define ICES    ICES5   //input capture edge select: 1-rising, 0-falling
 #define ICIE    ICIE5   //Input Capture Interupt enable
 
+#define PULSETIME 1
+#ifdef PULSETIME
+#define WRBUF_SIZE    512
+#else
 #define WRBUF_SIZE    140 // 6+4+126+1+1+2
+#endif
 
 #endif	//_WRDATA_H_
