@@ -15,6 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+#include "wrdata.h"
 
 #define PIN_EN_REG      PORT_CTL
 #define PIN_WR_REG      PORT_CTL
@@ -43,14 +44,17 @@ void driveEnabled() {
 void writeRequest() {
   write_request = !(PIN_WR_REG & PIN_WRREQ_MASK);
 
-  if (write_request) {  
-    TIMSK5 |= (1<<ICIE5);   // enable input capture interrupt
-    TCNT5 = 0;
+  if (write_request) {
+    TCNT = 0;
+    TCCRB = 0b10000001;   //enable timer
+    TIMSK |= (1<<ICIE);   // enable input capture interrupt
     PORT_ICPENBL &= ~(1<<_ICPENBL_BIT);  //debug 
   }
-  else { 
-    TIMSK5 &= ~(1<<ICIE5);  // disable input capture interrupt 
-    PORT_ICPENBL |= (1<<_ICPENBL_BIT); //debug 
+  else {
+    PORT_ICPENBL |= (1<<_ICPENBL_BIT); //debug   
+    TIMSK &= ~(1<<ICIE);  // disable input capture interrupt 
+    TCCRB = 0;              // disable Timer
+    TCNT = 0;
   }
   
   //Toggle WR led

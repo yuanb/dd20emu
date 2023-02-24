@@ -87,7 +87,7 @@ void print_enter_shell_msg()
   serial_log(PSTR("Press ENTER to enter dd20emu shell.\r\n"));
 }
 
-void sd_dir()
+void cmd_sd_dir()
 {
   //TODO: separate SD object from vzdsk
   SdFat* sd_prt = vzdsk->get_sd();
@@ -115,7 +115,7 @@ void sd_dir()
   }
 }
 
-void mount_image(char* filename)
+void cmd_mount_image(char* filename)
 {
   delete vzdsk;
   memset(diskimage, 0, sizeof(diskimage));
@@ -124,7 +124,7 @@ void mount_image(char* filename)
   vzdsk->Open(diskimage);
 }
 
-void img_catalog()
+void cmd_img_catalog()
 {
   /* DVZ VZ300 DOS FLOPPY FORMAT.doc is not accurate */
   /* the last 2 bytes of file entry is end addr, not file size */
@@ -160,50 +160,51 @@ void img_catalog()
   }
 }
 
-void dump_sector(int n, int s)
+static void print_buf(uint8_t* buf, uint8_t buf_size)
+{
+  for(uint8_t i=0; i < buf_size; i+=16)
+  {
+    uint8_t finish = i+16 < buf_size ? i+16 : buf_size;
+
+    for(uint8_t j=i; j<i+16; j++)
+    {
+      if (j<finish) {
+        serial_log(PSTR("%02X "), buf[j]);
+      }
+      else {
+        serial_log(PSTR("   "));
+      }
+    }
+    for(uint8_t j=i; j<finish; j++)
+    {
+      if (buf[j]>0x20 && buf[j]<0x7f) {
+        serial_log(PSTR("%c"), buf[j]);
+      }
+      else {
+        serial_log(PSTR("."));
+      }
+    }
+
+    serial_log(PSTR("\r\n"));      
+  }
+}
+void cmd_dump_sector(int n, int s)
 {
   serial_log(PSTR("TR:%d, SC:%d\r\n"), n,s);
   if(vzdsk->get_sector(n, s) != -1)
   {
-    for(uint8_t i=0; i < SECSIZE_VZ; i++)
-    {
-      uint8_t finish = i+16 < SECSIZE_VZ ? i+16 : SECSIZE_VZ;
-  
-      for(uint8_t j=i; j<i+16; j++)
-      {
-        if (j<finish) {
-          serial_log(PSTR("%02X "), fdc_sector[j]);
-        }
-        else {
-          serial_log(PSTR("   "));
-        }
-      }
-      for(uint8_t j=i; j<finish; j++)
-      {
-        if (fdc_sector[j]>0x20 && fdc_sector[j]<0x7f) {
-          serial_log(PSTR("%c"), fdc_sector[j]);
-        }
-        else {
-          serial_log(PSTR("."));
-        }
-      }
-
-      i+=15;  //cause there is i++ in the loop
-      serial_log(PSTR("\r\n"));      
-    }
-
-    serial_log(PSTR("\r\n"));
+    print_buf((uint8_t *)&fdc_sector, SECSIZE_VZ);
   }
 }
 
-void trklist()
+void cmd_trklist()
 {
   for(uint8_t i=0; i<TRK_NUM; i++) {
     serial_log(PSTR("TR:%02d - %08lX\r\n"), i, vzdsk->get_track_offset(i));
   }  
 }
 
-void sectormap()
+void cmd_sectormap()
 {
   serial_log(PSTR("Sector map:"));
   bool found = vzdsk->get_sector(0, pgm_read_byte_near(&inversed_sec_interleave[15]) ); //Sector 15 has the sector map table 
@@ -227,7 +228,7 @@ void sectormap()
   }
   serial_log(PSTR("\r\n"));
 }
-void scandisk()
+void cmd_scandisk()
 {
   serial_log(PSTR("Sequential scanning\r\n"));
   for(uint8_t i=0; i<TRK_NUM; i++) {
@@ -268,7 +269,7 @@ void scandisk()
   serial_log(PSTR("\r\nEnd of scandisk\r\n"));
 }
 
-void wrprot(char* flag)
+void cmd_wrprot(char* flag)
 {
   if (flag[0] == '1') {
     write_protect = true;
@@ -285,16 +286,19 @@ void wrprot(char* flag)
 }
 
 extern uint8_t wr_buf[WRBUF_SIZE];
-void wrbuf()
+void cmd_wrbuf()
 {
-  for(uint16_t i=0; i < WRBUF_SIZE; i++) {
-    if (i%16 == 0) {
-      serial_log(PSTR("\r\n"));
-    }
-    serial_log(PSTR("%02X "), wr_buf[i]);
-  }
+  print_buf((uint8_t *)&wr_buf, WRBUF_SIZE);
 
-  serial_log(PSTR("\r\n"));
+  uint16_t checksum = 0, checksum_exp;
+  uint8_t overhead = sizeof(((sec_hdr_t *)0)->GAP2) + sizeof(((sec_hdr_t *)0)->IDAM_closing);
+  uint8_t sec_datasize = SEC_DATA_SIZE+2;   /*TODO:remove when next tr, sec removed from sector struct*/
+  for(uint16_t i=0; i<sec_datasize; i++) {
+    checksum += wr_buf[i+overhead];
+  }
+  checksum_exp = wr_buf[overhead+sec_datasize] + 256 * wr_buf[overhead+sec_datasize+1];
+
+  serial_log(PSTR("\r\nCalculated checksum=%04X, Recevied checksum=%04X\r\n"), checksum, checksum_exp);
 }
 
 void handle_shell()
@@ -328,18 +332,18 @@ void handle_shell()
 
     //dir
     else if (strncmp_P(cmd, PSTR("dir"), 3)==0) {
-      sd_dir();
+      cmd_sd_dir();
     }
 
     //mount
     else if (strncmp_P(cmd, PSTR("mount "), 6)==0) {
       //TODO parse filename
-      mount_image(cmd+6);
+      cmd_mount_image(cmd+6);
     }
 
     //catalog
     else if (strncmp_P(cmd, PSTR("catalog"), 7)==0) {
-      img_catalog();
+      cmd_img_catalog();
     }
 
     //dumpsect
@@ -347,34 +351,34 @@ void handle_shell()
       int n=-1,s=-1;
       sscanf(cmd+9, "%d %d", &n,&s);
       if (n!=-1 && s!=-1) {
-        dump_sector(n, s);
+        cmd_dump_sector(n, s);
       } else
         serial_log(PSTR("dumpsect n s\r\n"));
     }
 
     //trklist
     else if (strncmp_P(cmd, PSTR("trklist"), 7)==0) {
-      trklist();
+      cmd_trklist();
     }
 
     //sectormap
     else if (strncmp_P(cmd, PSTR("sectormap"), 9)==0) {
-      sectormap();  
+      cmd_sectormap();  
     }
     
     //scandisk
     else if (strncmp_P(cmd, PSTR("scandisk"), 8)==0) {
-      scandisk();
+      cmd_scandisk();
     }
 
     //wrprot [1/0]
     else if (strncmp_P(cmd, PSTR("wrprot "), 7)==0) {
-      wrprot(cmd+7);
+      cmd_wrprot(cmd+7);
     }
 
     //wrbuf
     else if (strncmp_P(cmd, PSTR("wrbuf"), 5)==0) {
-      wrbuf();
+      cmd_wrbuf();
     }
 
     //exit
