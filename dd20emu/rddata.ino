@@ -36,13 +36,12 @@
 #define FM_BIT_0  delay_31_2us;
 
 #define FM_ENCODE_BIT(v,m) {  if (v & m) { FM_BIT_1; } else { FM_BIT_0; } }
-
 #define FM_OUTPUT_BIT(v,m) { pulse_1us; FM_ENCODE_BIT(v,m); }
 
 extern uint8_t fdc_sector[SECSIZE_VZ];
 extern vzdisk* vzdsk;
 
-uint8_t bitmask[8] = {
+const uint8_t bitmask[8] = {
   0b10000000,
   0b01000000,
   0b00100000,
@@ -73,19 +72,12 @@ bool handle_datastream() {
 
     for(uint8_t j=0; j<8; j++) {
       if (write_request) {
-        //tag /WR request
-        digitalWrite(9, HIGH);
-        digitalWrite(9,LOW);
         return false;
       }
       FM_OUTPUT_BIT(fdc_sector[i], bitmask[j]);
 
 
-//      put in dd20emu
-      //tag
-//      pinMode(9, OUTPUT);
-//      digitalWrite(9,LOW);
-//
+//      TODO: Faster code to stop RDDATA output when /wrreq
 //      if (fdc_sector[i] & bitmask[j]) {
 //        //1
 //        pulse_1us;

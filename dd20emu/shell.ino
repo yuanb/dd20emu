@@ -16,6 +16,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 #include "vzdisk.h"
+#include "wrdata.h"
 #define TEMPBUFFER_SIZE 80
 
 extern const uint8_t inversed_sec_interleave[SEC_NUM];
@@ -58,12 +59,13 @@ void print_help_screen()
   serial_log(PSTR("sectormap - Dump sector map\r\n"));
   serial_log(PSTR("scandisk - Scan all sectors from all tracks\r\n"));
   serial_log(PSTR("wrprot [1/0]- Enable write protect\r\n"));
+  serial_log(PSTR("wrbuf - Dump wrdata buf\r\n"));
   serial_log(PSTR("exit - Exit from shell, resume emulator\r\n"));
 }
 
 void print_status()
 {
-  serial_log(PSTR("\r\nVTech DD20 emulator, v0.0.b, 02/12/2023\r\n"));
+  serial_log(PSTR("\r\nVTech DD20 emulator, v0.0.c, 02/20/2023\r\n"));
   serial_log(PSTR("\r\nSector size: %d bytes"), sizeof(sector_t));
   serial_log(PSTR("\r\nSector header size: %d bytes\r\n"), sizeof(sec_hdr_t));
   
@@ -80,12 +82,57 @@ void print_status()
   serial_log(PSTR("Free memory: %d bytes\r\n"), freeMemory());
 }
 
-void print_enter_msg()
+void print_enter_shell_msg()
 {
   serial_log(PSTR("Press ENTER to enter dd20emu shell.\r\n"));
 }
 
-void sd_dir()
+static void print_buf8(uint8_t* buf, size_t buf_size)
+{
+  for(size_t i=0; i<buf_size; i+=16)
+  {
+    size_t finish = i+16 < buf_size ? i+16 : buf_size;
+
+    for(size_t j=i; j<i+16; j++)
+    {
+      if (j<finish) {
+        serial_log(PSTR("%02X "), buf[j]);
+      }
+      else {
+        serial_log(PSTR("   "));
+      }
+    }
+
+    for(size_t j=i; j<finish; j++)
+    {
+      if (buf[j]>0x20 && buf[j]<0x7f) {
+        serial_log(PSTR("%c"), buf[j]);
+      }
+      else {
+        serial_log(PSTR("."));
+      }
+    }
+
+    serial_log(PSTR("\r\n"));      
+  }
+}
+
+static void print_buf16(uint16_t* buf, size_t buf_size)
+{
+  for(size_t i=0; i < buf_size; i+=16)
+  {
+    size_t finish = i+16 < buf_size ? i+16 : buf_size;
+
+    for(size_t j=i; j<finish; j++)
+    {
+      serial_log(PSTR("%04X "), buf[j]);
+    }
+
+    serial_log(PSTR("\r\n"));
+  }
+}
+
+void cmd_sd_dir()
 {
   //TODO: separate SD object from vzdsk
   SdFat* sd_prt = vzdsk->get_sd();
@@ -98,8 +145,7 @@ void sd_dir()
   File root = sd_prt->open("/");
   while(true) {
     File entry =  root.openNextFile();
-    if (! entry) {
-      // no more files
+    if (!entry) {
       break;
     }
     //TODO: Check file extension, file size
@@ -108,18 +154,13 @@ void sd_dir()
         char filename[FILENAME_MAX];
         entry.getName(filename, FILENAME_MAX);
         serial_log(PSTR("%s"), filename);
-//        for(int i=0; i<FILENAME_MAX-strnlen(filename, FILENAME_MAX); i++)
-//          serial_log(PSTR("%c"), ' ');
-          
         serial_log(PSTR("\t%ld\r\n"), entry.size());
       }
     }
-  }  
-  
-  //List file not hidden, ends with DSK
+  }
 }
 
-void mount_image(char* filename)
+void cmd_mount_image(char* filename)
 {
   delete vzdsk;
   memset(diskimage, 0, sizeof(diskimage));
@@ -128,7 +169,7 @@ void mount_image(char* filename)
   vzdsk->Open(diskimage);
 }
 
-void img_catalog()
+void cmd_img_catalog()
 {
   /* DVZ VZ300 DOS FLOPPY FORMAT.doc is not accurate */
   /* the last 2 bytes of file entry is end addr, not file size */
@@ -156,7 +197,7 @@ void img_catalog()
   if (vzdsk->get_sector(0,0)) {
     sector_t *sector_ptr = (sector_t *)fdc_sector;
     uint8_t *data_ptr = sector_ptr->data_bytes;
-    for(int i=0; i<16; i++) {
+    for(uint8_t i=0; i<16; i++) {
       serial_log(PSTR("%02X "), *(data_ptr+i));
     }
 
@@ -164,50 +205,23 @@ void img_catalog()
   }
 }
 
-void dump_sector(int n, int s)
+void cmd_dump_sector(int n, int s)
 {
   serial_log(PSTR("TR:%d, SC:%d\r\n"), n,s);
   if(vzdsk->get_sector(n, s) != -1)
   {
-    for(int i=0; i < SECSIZE_VZ; i++)
-    {
-      int finish = i+16 < SECSIZE_VZ ? i+16 : SECSIZE_VZ;
-  
-      for(int j=i; j<i+16; j++)
-      {
-        if (j<finish) {
-          serial_log(PSTR("%02X "), fdc_sector[j]);
-        }
-        else {
-          serial_log(PSTR("   "));
-        }
-      }
-      for(int j=i; j<finish; j++)
-      {
-        if (fdc_sector[j]>0x20 && fdc_sector[j]<0x7f) {
-          serial_log(PSTR("%c"), fdc_sector[j]);
-        }
-        else {
-          serial_log(PSTR("."));
-        }
-      }
-
-      i+=15;  //cause there is i++ in the loop
-      serial_log(PSTR("\r\n"));      
-    }
-
-    serial_log(PSTR("\r\n"));
+    print_buf8((uint8_t *)&fdc_sector, SECSIZE_VZ);
   }
 }
 
-void trklist()
+void cmd_trklist()
 {
   for(uint8_t i=0; i<TRK_NUM; i++) {
     serial_log(PSTR("TR:%02d - %08lX\r\n"), i, vzdsk->get_track_offset(i));
   }  
 }
 
-void sectormap()
+void cmd_sectormap()
 {
   serial_log(PSTR("Sector map:"));
   bool found = vzdsk->get_sector(0, pgm_read_byte_near(&inversed_sec_interleave[15]) ); //Sector 15 has the sector map table 
@@ -217,7 +231,7 @@ void sectormap()
   }
   for(uint8_t i=0; i<78; i++) {
     if (i%2==0) {
-      serial_log(PSTR("\r\n%02d: "), i/2);
+      serial_log(PSTR("\r\nT%02d: "), i/2+1);
     }
     uint8_t value = fdc_sector[sizeof(sec_hdr_t)+i];
     for(uint8_t j=0; j<8; j++) {
@@ -231,7 +245,7 @@ void sectormap()
   }
   serial_log(PSTR("\r\n"));
 }
-void scandisk()
+void cmd_scandisk()
 {
   serial_log(PSTR("Sequential scanning\r\n"));
   for(uint8_t i=0; i<TRK_NUM; i++) {
@@ -247,7 +261,7 @@ void scandisk()
   randomSeed(analogRead(0));
 
   serial_log(PSTR("\r\n100 random track scanning\r\n"));
-  for(int i=0; i<100; i++) {
+  for(uint8_t i=0; i<100; i++) {
     uint8_t tr = random(0, TRK_NUM);
     for(uint8_t j=0; j<SEC_NUM; j++) {
       serial_log(PSTR("\r#%03d, TR:%02d, SEC:%02d"), i+1, tr,j);
@@ -259,7 +273,7 @@ void scandisk()
   }
 
   serial_log(PSTR("\r\n200 random sector scanning\r\n"));
-  for(int i=0; i<200; i++) {
+  for(uint8_t i=0; i<200; i++) {
     uint8_t tr = random(0, TRK_NUM);
     uint8_t sec = random(0, SEC_NUM);
     serial_log(PSTR("\r#%03d, TR:%02d, SEC:%02d"),i+1, tr,sec);
@@ -272,7 +286,7 @@ void scandisk()
   serial_log(PSTR("\r\nEnd of scandisk\r\n"));
 }
 
-void wrprot(char* flag)
+void cmd_wrprot(char* flag)
 {
   if (flag[0] == '1') {
     write_protect = true;
@@ -286,6 +300,30 @@ void wrprot(char* flag)
   }
   else
     serial_log(PSTR("wrprot 1 or 0\r\n"));
+}
+
+#ifdef PULSETIME
+extern uint16_t wr_buf[];
+#else
+extern uint8_t wr_buf[];
+#endif
+void cmd_wrbuf()
+{
+#ifdef PULSETIME
+  print_buf16((uint16_t *)&wr_buf, WRBUF_SIZE);
+#else 
+  print_buf8((uint8_t *)&wr_buf, WRBUF_SIZE);
+#endif
+
+  uint16_t checksum = 0, checksum_exp;
+  uint8_t overhead = sizeof(((sec_hdr_t *)0)->GAP2) + sizeof(((sec_hdr_t *)0)->IDAM_closing);
+  uint8_t sec_datasize = SEC_DATA_SIZE+2;   /*TODO:remove when next tr, sec removed from sector struct*/
+  for(uint16_t i=0; i<sec_datasize; i++) {
+    checksum += wr_buf[i+overhead];
+  }
+  checksum_exp = wr_buf[overhead+sec_datasize] + 256 * wr_buf[overhead+sec_datasize+1];
+
+  serial_log(PSTR("\r\nCalculated checksum=%04X, Recevied checksum=%04X\r\n"), checksum, checksum_exp);
 }
 
 void handle_shell()
@@ -319,18 +357,18 @@ void handle_shell()
 
     //dir
     else if (strncmp_P(cmd, PSTR("dir"), 3)==0) {
-      sd_dir();
+      cmd_sd_dir();
     }
 
     //mount
     else if (strncmp_P(cmd, PSTR("mount "), 6)==0) {
       //TODO parse filename
-      mount_image(cmd+6);
+      cmd_mount_image(cmd+6);
     }
 
     //catalog
     else if (strncmp_P(cmd, PSTR("catalog"), 7)==0) {
-      img_catalog();
+      cmd_img_catalog();
     }
 
     //dumpsect
@@ -338,35 +376,40 @@ void handle_shell()
       int n=-1,s=-1;
       sscanf(cmd+9, "%d %d", &n,&s);
       if (n!=-1 && s!=-1) {
-        dump_sector(n, s);
+        cmd_dump_sector(n, s);
       } else
         serial_log(PSTR("dumpsect n s\r\n"));
     }
 
     //trklist
     else if (strncmp_P(cmd, PSTR("trklist"), 7)==0) {
-      trklist();
+      cmd_trklist();
     }
 
     //sectormap
     else if (strncmp_P(cmd, PSTR("sectormap"), 9)==0) {
-      sectormap();  
+      cmd_sectormap();  
     }
     
     //scandisk
     else if (strncmp_P(cmd, PSTR("scandisk"), 8)==0) {
-      scandisk();
+      cmd_scandisk();
     }
 
     //wrprot [1/0]
     else if (strncmp_P(cmd, PSTR("wrprot "), 7)==0) {
-      wrprot(cmd+7);
+      cmd_wrprot(cmd+7);
+    }
+
+    //wrbuf
+    else if (strncmp_P(cmd, PSTR("wrbuf"), 5)==0) {
+      cmd_wrbuf();
     }
 
     //exit
     else if (strncmp_P(cmd, PSTR("exit"), 4)==0) {
       serial_log(PSTR("Emulator is RESUMED.\r\n"));
-      print_enter_msg();
+      print_enter_shell_msg();
       in_shell = false;
     }
     else if( cmd[0]!=0 )

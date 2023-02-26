@@ -15,6 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+#include "wrdata.h"
 
 #define PIN_EN_REG      PORT_CTL
 #define PIN_WR_REG      PORT_CTL
@@ -23,8 +24,8 @@
 
 #define PIN_EMUEN_MASK  (1<<PIN_EMUEN_BIT)
 
-bool drv_enabled = false;
-bool write_request = false;
+volatile bool drv_enabled = false;
+volatile bool write_request = false;
 
 void driveEnabled() {
   drv_enabled = !(PIN_EN_REG & PIN_EN_MASK);
@@ -33,12 +34,29 @@ void driveEnabled() {
   bool emuEn = PORT_EMUEN & PIN_EMUEN_MASK;  //digitalRead(emuEnPin);
   drv_enabled = drv_enabled & emuEn;  
 
-  handle_drive_enable();
+  static bool old_drv_enabled = false;
+  if (drv_enabled != old_drv_enabled) {
+    digitalWrite(LED_BUILTIN, drv_enabled);
+    old_drv_enabled = drv_enabled;
+  }
 }
 
 void writeRequest() {
   write_request = !(PIN_WR_REG & PIN_WRREQ_MASK);
 
+  if (write_request) {
+    TCNT = 0;
+    TCCRB = 0b10000001;   //enable timer
+    TIMSK |= (1<<ICIE);   // enable input capture interrupt
+    PORT_ICPENBL &= ~(1<<_ICPENBL_BIT);  //debug 
+  }
+  else {
+    PORT_ICPENBL |= (1<<_ICPENBL_BIT); //debug   
+    TIMSK &= ~(1<<ICIE);  // disable input capture interrupt 
+    TCCRB = 0;              // disable Timer
+    TCNT = 0;
+  }
+  
   //Toggle WR led
   PORT_WRLED = (PORT_WRLED & ~(1 << WRLED_DATA_BIT)) | (write_request << WRLED_DATA_BIT);
 }

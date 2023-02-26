@@ -212,7 +212,8 @@ bool vzdisk::get_sector(uint8_t TR, uint8_t SEC, bool v)
           
           //data part
           uint16_t checksum = 0;
-          for(int i=0; i<SEC_DATA_SIZE+2 /*TODO:remove when next tr, sec removed from sector struct*/; i++) {
+          uint8_t sec_datasize = SEC_DATA_SIZE+2;   /*TODO:remove when next tr, sec removed from sector struct*/
+          for(int i=0; i<sec_datasize; i++) {
             uint8_t value = buf[cur++];
             checksum += value;
             fdc_sector[sizeof(sec_hdr_t)+i] = value;

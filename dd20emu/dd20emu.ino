@@ -49,7 +49,7 @@
 char diskimage[FILENAME_MAX] = "HELLO.DSK";
 vzdisk *vzdsk = NULL;
 
-bool write_protect = true;
+bool write_protect = false;
 
 void setup() {
   Serial.begin(9600);
@@ -57,14 +57,19 @@ void setup() {
     ; // wait for serial port to connect. Needed for native USB port only
   }
 
-  serial_log(PSTR("Begin DD-20 emulation\r\n"));
-  print_status();
-
   // put your setup code here, to run once:
   // set the digital pin as output:
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(wrLedPin, OUTPUT);
   digitalWrite(wrLedPin, LOW);
+  
+  //DEBUG: debug code for logic analyzer
+  pinMode(icpFollowerPin, OUTPUT);
+  digitalWrite(icpFollowerPin, HIGH);
+  pinMode(icpEnabledPin, OUTPUT);
+  digitalWrite(icpEnabledPin, HIGH);
+  //DEBUG: debug code for logic analyzer
+  
 
   pinMode(emuEnPin, INPUT);
 
@@ -91,7 +96,9 @@ void setup() {
   attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(stepPin2), handle_steps, CHANGE);
   attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(stepPin3), handle_steps, CHANGE); 
 
-  print_enter_msg();
+  print_status();
+  print_enter_shell_msg();
+  initICPTimer();
 }
 
 void loop() {
