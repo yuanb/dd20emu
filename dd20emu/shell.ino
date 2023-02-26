@@ -25,13 +25,33 @@ char *read_user_cmd(void *buffer, int buflen)
 {
   char *buf = (char *) buffer;
   byte l = 0;
+  static bool escaped = false;
   do
     {
       int i = Serial.read();
       if( (i==13 || i==10) )
         { Serial.println(); break; }
       else if( i==27 )
-        { l=0; Serial.println(); break; }
+        { l=0; escaped=true; }
+      else if (escaped && i!=-1) {
+        if (i=='[') {
+          //Nothing, skip the '['
+          continue;
+        }
+        escaped = false;
+        switch (i) {
+          case 'A':   //Up key/Mouse wheel up
+            break;
+          case 'B':   //Down key/Mouse wheel down
+            break;
+          case 'C':   //Right key
+            break;
+          case 'D':   //Left key
+            break;
+            serial_log(PSTR("Unrecognized escaped char:%d\r\n"),i);
+            break;
+        }
+      }
       else if( i==8 || i==0x7f)
         { 
           if( l>0 )
