@@ -231,7 +231,7 @@ void cmd_sectormap()
   }
   for(uint8_t i=0; i<78; i++) {
     if (i%2==0) {
-      serial_log(PSTR("\r\n%02d: "), i/2);
+      serial_log(PSTR("\r\nT%02d: "), i/2+1);
     }
     uint8_t value = fdc_sector[sizeof(sec_hdr_t)+i];
     for(uint8_t j=0; j<8; j++) {
