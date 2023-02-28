@@ -55,3 +55,56 @@ void __assert(const char *__func, const char *__file, int __lineno, const char *
     // abort program execution.
     abort();
 }
+
+void print_buf8(uint8_t* buf, size_t buf_size)
+{
+  for(size_t i=0; i<buf_size; i+=16)
+  {
+    size_t finish = i+16 < buf_size ? i+16 : buf_size;
+
+    for(size_t j=i; j<i+16; j++)
+    {
+      if (j<finish) {
+        serial_log(PSTR("%02X "), buf[j]);
+      }
+      else {
+        serial_log(PSTR("   "));
+      }
+    }
+
+    for(size_t j=i; j<finish; j++)
+    {
+      if (buf[j]>0x20 && buf[j]<0x7f) {
+        serial_log(PSTR("%c"), buf[j]);
+      }
+      else {
+        serial_log(PSTR("."));
+      }
+    }
+
+    serial_log(PSTR("\r\n"));      
+  }
+}
+
+void print_buf16(uint16_t* buf, size_t buf_size, bool decimal)
+{
+  for(size_t i=0; i < buf_size; i+=16)
+  {
+    size_t finish = i+16 < buf_size ? i+16 : buf_size;
+
+    for(size_t j=i; j<finish; j++)
+    {
+      if (decimal) {
+        serial_log(PSTR("%d"), buf[j]);
+      }
+      else {
+        serial_log(PSTR("%04X"), buf[j]);
+      }
+
+      if (j<(finish-1))
+        serial_log(PSTR(","));
+    }
+
+    serial_log(PSTR("\r\n"));
+  }
+}

@@ -48,9 +48,8 @@
 
 #define PULSETIME 1
 #ifdef PULSETIME
-#define WRBUF_SIZE    512
-#else
-#define WRBUF_SIZE    140 // 6+4+126+1+1+2
+#define WRBUF16_SIZE    2248 // 140 bytes*8 bit * 2 pulse/bit = 2240
 #endif
+#define WRBUF_SIZE    140 // 6+4+126+1+1+2
 
 #endif	//_WRDATA_H_

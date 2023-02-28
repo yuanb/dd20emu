@@ -20,6 +20,8 @@
 //FM encoded 0 : ___n__________n___ : 1us + 31.2us + 1us (next bit)
 //FM encoded 1 : ___n___n______n___ : 1us + 11 us + 1us + 19.2 us + 1us (next bit)
 
+#include "utilities.h"
+
 #define _delayNanoseconds(__ns)     __builtin_avr_delay_cycles( (double)(F_CPU)*((double)__ns)/1.0e9 /*+ 0.5 */)
 
 #define delay_1us     _delayNanoseconds(1000)
@@ -52,14 +54,27 @@ const uint8_t bitmask[8] = {
   0b00000001
 };
 
+uint8_t current_sector = 0;
+extern uint16_t buf_idx;
+extern uint16_t wr_buf16[];
+
 bool handle_datastream() {
-  static uint8_t current_sector = 0;
   static bool led = true;
 
   if (!drv_enabled || write_request || !vzdsk)
     return false;
 
   uint8_t tr = vtech1_track_x2/2;
+
+#ifdef  PULSETIME
+  //if wrbuf is not empty
+  if (buf_idx !=0) {
+    serial_log(PSTR("WRDATA-TR-%d-SEC-%d-LEN-%d\r\n"), tr, current_sector, buf_idx);
+    print_buf16(wr_buf16, buf_idx, true);
+    buf_idx =0;
+  }
+#endif
+  
   if (!vzdsk->get_sector(tr, current_sector)) {
     serial_log(PSTR("failed on reading sector TR: %d, :SEC: %d"), tr, current_sector);
     return false;

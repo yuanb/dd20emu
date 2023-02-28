@@ -98,7 +98,6 @@ void setup() {
 
   print_status();
   print_enter_shell_msg();
-  initICPTimer();
 }
 
 void loop() {

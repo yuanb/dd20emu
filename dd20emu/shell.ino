@@ -107,51 +107,6 @@ void print_enter_shell_msg()
   serial_log(PSTR("Press ENTER to enter dd20emu shell.\r\n"));
 }
 
-static void print_buf8(uint8_t* buf, size_t buf_size)
-{
-  for(size_t i=0; i<buf_size; i+=16)
-  {
-    size_t finish = i+16 < buf_size ? i+16 : buf_size;
-
-    for(size_t j=i; j<i+16; j++)
-    {
-      if (j<finish) {
-        serial_log(PSTR("%02X "), buf[j]);
-      }
-      else {
-        serial_log(PSTR("   "));
-      }
-    }
-
-    for(size_t j=i; j<finish; j++)
-    {
-      if (buf[j]>0x20 && buf[j]<0x7f) {
-        serial_log(PSTR("%c"), buf[j]);
-      }
-      else {
-        serial_log(PSTR("."));
-      }
-    }
-
-    serial_log(PSTR("\r\n"));      
-  }
-}
-
-static void print_buf16(uint16_t* buf, size_t buf_size)
-{
-  for(size_t i=0; i < buf_size; i+=16)
-  {
-    size_t finish = i+16 < buf_size ? i+16 : buf_size;
-
-    for(size_t j=i; j<finish; j++)
-    {
-      serial_log(PSTR("%04X "), buf[j]);
-    }
-
-    serial_log(PSTR("\r\n"));
-  }
-}
-
 void cmd_sd_dir()
 {
   //TODO: separate SD object from vzdsk
@@ -322,18 +277,10 @@ void cmd_wrprot(char* flag)
     serial_log(PSTR("wrprot 1 or 0\r\n"));
 }
 
-#ifdef PULSETIME
-extern uint16_t wr_buf[];
-#else
 extern uint8_t wr_buf[];
-#endif
 void cmd_wrbuf()
 {
-#ifdef PULSETIME
-  print_buf16((uint16_t *)&wr_buf, WRBUF_SIZE);
-#else 
   print_buf8((uint8_t *)&wr_buf, WRBUF_SIZE);
-#endif
 
   uint16_t checksum = 0, checksum_exp;
   uint8_t overhead = sizeof(((sec_hdr_t *)0)->GAP2) + sizeof(((sec_hdr_t *)0)->IDAM_closing);

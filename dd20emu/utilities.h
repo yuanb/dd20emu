@@ -24,3 +24,5 @@ extern char *__brkval;
 #endif  // __arm__
  
 int freeMemory();
+void print_buf8(uint8_t* buf, size_t buf_size);
+void print_buf16(uint16_t* buf, size_t buf_size, bool decimal=false);

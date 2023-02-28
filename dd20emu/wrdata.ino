@@ -1,9 +1,14 @@
 #include "wrdata.h"
 
-void initICPTimer()
+uint8_t wr_buf[WRBUF_SIZE] = {0};
+#ifdef PULSETIME
+uint16_t wr_buf16[WRBUF16_SIZE] = {0};
+#endif
+
+bool skipFirst = true;
+inline void initICP()
 {
-  noInterrupts();
-  
+  skipFirst = true;
   //Mega2560 Timer 5 for ICP5
   TCCRA = 0;
   TCCRB = 0;
@@ -15,9 +20,15 @@ void initICPTimer()
   //0b11 000 001 - 1/1 prescaler (001) rising edge noise canceler
   //0b10 000 001 - 1/1 prescaler (001) falling edge noise canceler
   TCCRB = 0b10000001;
-  
-  TCNT = 0;  
-  interrupts();
+  TCNT = 0;
+  TIMSK |= (1<<ICIE);   // enable input capture interrupt
+}
+
+inline void disableICP()
+{ 
+  TIMSK &= ~(1<<ICIE);  // disable input capture interrupt 
+  TCCRB = 0b10000000;   // disable Timer
+  TCNT = 0;
 }
 
 
@@ -37,15 +48,8 @@ void initICPTimer()
 
 //https://forum.arduino.cc/t/pwm-input-capture-interrupt/544530/3
 
-static uint16_t buf_idx = 0;
+uint16_t buf_idx = 0;
 static int8_t bit_idx = 7;
-//static uint8_t value = 0;
-
-#ifdef PULSETIME
-uint16_t wr_buf[WRBUF_SIZE] = {0};
-#else
-uint8_t wr_buf[WRBUF_SIZE] = {0};
-#endif
 
 ISR(TIMER5_CAPT_vect)
 {
@@ -70,20 +74,16 @@ ISR(TIMER5_CAPT_vect)
     TCCRB |= (1 << ICES5); // Switch to Rising Edge
   }
 
-  //TODO and last puls was a short one, use a 10% threshold with calculated timer value
-  //observed values:
-  //short pulse 52,54,55,56,57
-  //middle pulse 15F, 160,161,162,
-  //long pulse 1DB, 1DC, 1DE, 1DF
-
 #ifdef  PULSETIME
-    wr_buf[buf_idx] = PulseTime;
-    if (buf_idx < WRBUF_SIZE-1) {
-      buf_idx++;
+    if (skipFirst) {
+      skipFirst = false;
+    } else {
+      wr_buf16[buf_idx] = PulseTime;
+      if (buf_idx < WRBUF16_SIZE-1) {
+        buf_idx++;
+      }
     }
 #else
-
-  //uint8_t nibble;
   if (0x120<= PulseTime && PulseTime <= 0x166)
     //nibble = 1;
     bitSet(wr_buf[buf_idx], bit_idx);
@@ -93,17 +93,10 @@ ISR(TIMER5_CAPT_vect)
   else
     return;
 
-  //value = (value << bit_idx) | nibble;
-
-  //wr_buf[buf_idx] = nibble;
-  //bit_idx = 8;
-  
-  //wr_buf[buf_idx] = value;
   bit_idx--;
 
   if (bit_idx < 0) {
     bit_idx = 7;
-    //value = 0;
     if (buf_idx < WRBUF_SIZE) {
       buf_idx++;
     }

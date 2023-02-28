@@ -45,16 +45,12 @@ void writeRequest() {
   write_request = !(PIN_WR_REG & PIN_WRREQ_MASK);
 
   if (write_request) {
-    TCNT = 0;
-    TCCRB = 0b10000001;   //enable timer
-    TIMSK |= (1<<ICIE);   // enable input capture interrupt
-    PORT_ICPENBL &= ~(1<<_ICPENBL_BIT);  //debug 
+    initICP();
+    PORT_ICPENBL &= ~(1<<_ICPENBL_BIT); //Toggle WR Led
   }
   else {
-    PORT_ICPENBL |= (1<<_ICPENBL_BIT); //debug   
-    TIMSK &= ~(1<<ICIE);  // disable input capture interrupt 
-    TCCRB = 0;              // disable Timer
-    TCNT = 0;
+    disableICP();
+    PORT_ICPENBL |= (1<<_ICPENBL_BIT); //Toggle WR Led
   }
   
   //Toggle WR led
